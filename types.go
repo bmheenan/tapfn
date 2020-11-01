@@ -11,6 +11,7 @@ import (
 type TapController interface {
 	ClearDomain(domain string) error
 	NewPersonteam(email, name, abbrev, colorf, colorb string, itertiming taps.IterTiming, parents []string) error
+	GetPersonteam(email string) (*taps.Personteam, error)
 }
 
 // ErrNotFound indicates that no matching record was found when querying

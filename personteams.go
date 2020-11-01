@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/bmheenan/tapdb"
+
 	"github.com/bmheenan/taps"
 )
 
@@ -45,4 +47,16 @@ func (cn *cnTapdb) NewPersonteam(
 		}
 	}
 	return nil
+}
+
+// GetPersonteam gets the details for the given personteam, without details of any children
+func (cn *cnTapdb) GetPersonteam(email string) (*taps.Personteam, error) {
+	pt, err := cn.db.GetPersonteam(email)
+	if errors.Is(err, tapdb.ErrNotFound) {
+		return nil, fmt.Errorf("Personteam not found: %w", ErrNotFound)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("Could not get personteam: %v", err)
+	}
+	return pt, nil
 }
