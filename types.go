@@ -10,15 +10,16 @@ import (
 // TapController provides fucntions for reading and changing application state
 type TapController interface {
 	ClearDomain(domain string) error
-	NewPersonteam(email, name, abbrev, colorf, colorb string, itertiming taps.IterTiming, parents []string) error
-	GetPersonteam(email string) (*taps.Personteam, error)
+
+	NewStk(email, name, abbrev, colorf, colorb string, itertiming taps.Cadence, parents []string) error
+	GetStk(email string) (*taps.Stakeholder, error)
+
+	NewThread(name, owner, iter string, cost int, parents, children []int64) (int64, error)
+	LinkThreads(parent, child int64) error
 }
 
 // ErrNotFound indicates that no matching record was found when querying
 var ErrNotFound = errors.New("Not found")
-
-// ErrBadArgs indicates that the arguments given to the function were bad
-var ErrBadArgs = errors.New("Bad arguments")
 
 type cnTapdb struct {
 	db tapdb.DBInterface
