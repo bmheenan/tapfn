@@ -41,7 +41,7 @@ func getEndDate(iter string) (time.Time, error) {
 	}
 	if yrly {
 		y, _ := strconv.Atoi(iter)
-		return time.Date(y, time.Month(12), 31, 0, 0, 0, 0, nil), nil
+		return time.Date(y, time.Month(12), 31, 0, 0, 0, 0, time.UTC), nil
 	}
 	qrly, errQ := regexp.MatchString("^[0-9]{4} [Qq][1-4]$", iter)
 	if errQ != nil {
@@ -64,7 +64,7 @@ func getEndDate(iter string) (time.Time, error) {
 			m = 12
 			d = 31
 		}
-		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, nil), nil
+		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
 	}
 	mnly, errM := regexp.MatchString("^[0-9]{4} [A-Za-z]{3}$", iter)
 	if errM != nil {
@@ -72,7 +72,7 @@ func getEndDate(iter string) (time.Time, error) {
 	}
 	if mnly {
 		y, _ := strconv.Atoi(iter[0:4])
-		mo := strings.ToLower(iter[6:])
+		mo := strings.ToLower(iter[5:])
 		var d, m int
 		if mo == "jan" {
 			m = 1
@@ -117,7 +117,7 @@ func getEndDate(iter string) (time.Time, error) {
 		} else {
 			return time.Time{}, fmt.Errorf("Could not parse to a month: %v", mo)
 		}
-		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, nil), nil
+		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
 	}
 	bwly, errB := regexp.MatchString("^[0-9]{4} [Ww][0-9]{1,2}$", iter)
 	if errB != nil {
