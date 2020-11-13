@@ -26,7 +26,12 @@ type TapController interface {
 	// GetStk gets the information for the stakeholder with the given `email`
 	GetStk(email string) (*taps.Stakeholder, error)
 
-	// threads.go
+	// threadsget.go
+
+	// GetThread returns the info for the given thread
+	GetThread(id int64) (th *taps.Thread, err error)
+
+	// threadsnew.go
 
 	// NewThread creates a new thread with the given information. `name` is the name of the thread. `owner` is the email
 	// of an existing stakeholder. `iter` is its iteration. `cost` is the direct cost of the thread. `parents` and
