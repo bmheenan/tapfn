@@ -9,14 +9,6 @@ import (
 	"github.com/bmheenan/taps"
 )
 
-// Creates a new thread at the end of the owner's iteration, or right before the earliest parent. It will be marked as
-// `not started`
-//     name: the name of the thread
-//     owner: the email of the owner (must already exist)
-//     iter: the iteration to put the thread in
-//     cost: the direct cost of the thread
-//     parents: a list of threads who will be parents of this thread
-//     children: a list of threads who will be children of this thread. You may not create a loop
 func (cn *cnTapdb) NewThread(name, owner, iter string, cost int, parents, children []int64) (int64, error) {
 	if name == "" || owner == "" || iter == "" || cost < 0 {
 		return 0, errors.New("Name, owner, and iter must be non-blank; cost must be > 0")
@@ -35,13 +27,13 @@ func (cn *cnTapdb) NewThread(name, owner, iter string, cost int, parents, childr
 		// TODO: Delete the thread. It's in an invalid state without any stakeholders
 	}
 	for _, p := range parents {
-		errP := cn.LinkThreads(p, id)
+		errP := cn.NewThreadHierLink(p, id)
 		if errP != nil {
 			return id, fmt.Errorf("Could not link to parent %v: %v", p, errP)
 		}
 	}
 	for _, c := range children {
-		errC := cn.LinkThreads(id, c)
+		errC := cn.NewThreadHierLink(id, c)
 		if errC != nil {
 			return id, fmt.Errorf("Could not link to child thread %v: %v", c, errC)
 		}
@@ -53,7 +45,7 @@ func (cn *cnTapdb) NewThread(name, owner, iter string, cost int, parents, childr
 	return id, nil
 }
 
-func (cn *cnTapdb) LinkThreads(parent, child int64) error {
+func (cn *cnTapdb) NewThreadHierLink(parent, child int64) error {
 	// Don't allow loops of dependencies in threads
 	des, errDes := cn.db.GetThreadDes(child)
 	if errDes != nil {

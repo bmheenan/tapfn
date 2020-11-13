@@ -131,7 +131,7 @@ func getEndDate(iter string) (time.Time, error) {
 }
 
 func iterContaining(date time.Time, cadence taps.Cadence) (string, error) {
-	y := date.Year
+	y := date.Year()
 	if cadence == taps.Yearly {
 		return fmt.Sprintf("%v", y), nil
 	} else if cadence == taps.Quarterly {

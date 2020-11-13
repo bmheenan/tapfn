@@ -9,7 +9,7 @@ import (
 // of the thread with id `parent`. `parent` must be a parent of the other two threads, and the two threads must be in
 // the same iteration
 // If `reference` = 0, `thread` will be moved to the end of the iteration
-func (cn *cnTapdb) MoveThreadParent(thread, reference, parent int64) error {
+func (cn *cnTapdb) MoveThreadForParent(thread, reference, parent int64) error {
 	var nOrd int
 	t, errT := cn.db.GetThread(thread)
 	if errT != nil {
@@ -71,7 +71,7 @@ func (cn *cnTapdb) MoveThreadParent(thread, reference, parent int64) error {
 // MoveThreadStakeholder moves the thread with id `thread` immediately before the thread with id `reference`, as long as
 // `stakeholder` is a stakeholder of both, and they appear in the same iteration for that stakeholder
 // If `reference` = 0, `thread` will be moved to the end of the iteration
-func (cn *cnTapdb) MoveThreadStakeholder(thread, reference int64, stkE string) error {
+func (cn *cnTapdb) MoveThreadForStk(thread, reference int64, stkE string) error {
 	var nOrd int
 	t, errT := cn.db.GetThread(thread)
 	if errT != nil {
