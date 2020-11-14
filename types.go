@@ -31,6 +31,10 @@ type TapController interface {
 	// GetThread returns the info for the given thread
 	GetThread(id int64) (th *taps.Thread, err error)
 
+	GetThreadrowsByStkIter(stk, iter string) (ths []*taps.Threadrow, err error)
+
+	GetThreadrowsByParentIter(parent int64, iter string) (ths []*taps.Threadrow, err error)
+
 	// threadsnew.go
 
 	// NewThread creates a new thread with the given information. `name` is the name of the thread. `owner` is the email

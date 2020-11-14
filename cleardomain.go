@@ -27,11 +27,11 @@ func (cn *cnTapdb) ClearDomain(domain string) error {
 	}
 	errPPC := cn.db.ClearStkHierLinks(domain)
 	if errPPC != nil {
-		return fmt.Errorf("Could not clear personteam parent child relationship: %v", errPPC)
+		return fmt.Errorf("Could not clear stakeholder parent child relationship: %v", errPPC)
 	}
 	errPT := cn.db.ClearStks(domain)
 	if errPT != nil {
-		return fmt.Errorf("Could not clear personteams: %v", errPT)
+		return fmt.Errorf("Could not clear stakeholders: %v", errPT)
 	}
 	return nil
 }

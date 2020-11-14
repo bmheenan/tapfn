@@ -10,14 +10,12 @@ import (
 func setupTest(config string) (
 	cn TapController,
 	stks map[string]*stkInfo,
-	iters []string,
 	ths map[string]*thInfo,
 	err error,
 ) {
 	dom := "example.com"
 	stks = stkCs[config]
 	ths = thCs[config]
-	iters = iterCs[config]
 	var errCn error
 	cn, errCn = Init(getTestCredentials())
 	if errCn != nil {
@@ -35,6 +33,10 @@ func setupTest(config string) (
 	}
 	sort.Strings(stkNs)
 	for _, n := range stkNs {
+		ps := []string{}
+		for _, p := range stks[n].Parents {
+			ps = append(ps, stks[p].Email)
+		}
 		errStk := cn.NewStk(
 			stks[n].Email,
 			stks[n].Name,
@@ -42,7 +44,7 @@ func setupTest(config string) (
 			"#ffffff",
 			"#000000",
 			stks[n].Cadence,
-			stks[n].Parents,
+			ps,
 		)
 		if errStk != nil {
 			err = fmt.Errorf("Could not create stakeholder %v: %v", stks[n].Name, errStk)
@@ -91,24 +93,54 @@ var stkCs = map[string](map[string]*stkInfo){
 	"1 stk": {
 		"a": &stkInfo{
 			Email:   "a@example.com",
-			Name:    "Person A",
-			Abbrev:  "A",
+			Name:    "Person a",
+			Abbrev:  "a",
 			Cadence: taps.Monthly,
 		},
 	},
 	"1 th": {
 		"a": &stkInfo{
 			Email:   "a@example.com",
-			Name:    "Person A",
-			Abbrev:  "A",
+			Name:    "Person a",
+			Abbrev:  "a",
 			Cadence: taps.Quarterly,
 		},
 	},
-}
-
-var iterCs = map[string]([]string){
-	"1 stk": {"2020 Oct"},
-	"1 th":  {"2020 Oct"},
+	"s team": {
+		"a": &stkInfo{
+			Email:   "a@example.com",
+			Name:    "Team a",
+			Abbrev:  "a",
+			Cadence: taps.Quarterly,
+		},
+		"aa": &stkInfo{
+			Email:   "aa@example.com",
+			Name:    "Person aa",
+			Abbrev:  "aa",
+			Cadence: taps.Monthly,
+			Parents: []string{"a"},
+		},
+		"ab": &stkInfo{
+			Email:   "ab@example.com",
+			Name:    "Person ab",
+			Abbrev:  "ab",
+			Cadence: taps.Monthly,
+			Parents: []string{"a"},
+		},
+		"b": &stkInfo{
+			Email:   "b@example.com",
+			Name:    "Team b",
+			Abbrev:  "b",
+			Cadence: taps.Quarterly,
+		},
+		"ba": &stkInfo{
+			Email:   "ba@example.com",
+			Name:    "Person ba",
+			Abbrev:  "ba",
+			Cadence: taps.Monthly,
+			Parents: []string{"b"},
+		},
+	},
 }
 
 var thCs = map[string](map[string]*thInfo){
@@ -116,9 +148,44 @@ var thCs = map[string](map[string]*thInfo){
 	"1 th": {
 		"A": &thInfo{
 			Name:  "A",
-			Iter:  iterCs["1 th"][0],
+			Iter:  "2020 Oct",
 			Cost:  1,
 			Owner: stkCs["1 th"]["a"].Email,
+		},
+	},
+	"s team": {
+		"A": &thInfo{
+			Name:  "A",
+			Iter:  "2020 Q4",
+			Cost:  0,
+			Owner: stkCs["s team"]["a"].Email,
+		},
+		"AA": &thInfo{
+			Name:    "AA",
+			Iter:    "2020 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["aa"].Email,
+			Parents: []string{"A"},
+		},
+		"AB": &thInfo{
+			Name:    "AB",
+			Iter:    "2020 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["ab"].Email,
+			Parents: []string{"A"},
+		},
+		"AC": &thInfo{
+			Name:    "AC",
+			Iter:    "2020 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["ab"].Email,
+			Parents: []string{"A"},
+		},
+		"B": &thInfo{
+			Name:  "B",
+			Iter:  "2020 Q4",
+			Cost:  10,
+			Owner: stkCs["s team"]["aa"].Email,
 		},
 	},
 }
