@@ -3,6 +3,7 @@ package tapfn
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/bmheenan/taps"
 )
@@ -67,6 +68,9 @@ func setupTest(config string) (
 			return
 		}
 		(*ths[n]).ID = id
+	}
+	if db, ok := cn.(*cnTapdb); ok {
+		db.timeOverride = time.Date(2020, 10, 1, 0, 0, 0, 0, time.UTC)
 	}
 	return
 }
@@ -148,7 +152,7 @@ var thCs = map[string](map[string]*thInfo){
 	"1 th": {
 		"A": &thInfo{
 			Name:  "A",
-			Iter:  "2020 Oct",
+			Iter:  "2020-10 Oct",
 			Cost:  1,
 			Owner: stkCs["1 th"]["a"].Email,
 		},
@@ -162,28 +166,28 @@ var thCs = map[string](map[string]*thInfo){
 		},
 		"AA": &thInfo{
 			Name:    "AA",
-			Iter:    "2020 Oct",
+			Iter:    "2020-10 Oct",
 			Cost:    5,
 			Owner:   stkCs["s team"]["aa"].Email,
 			Parents: []string{"A"},
 		},
 		"AB": &thInfo{
 			Name:    "AB",
-			Iter:    "2020 Oct",
+			Iter:    "2020-10 Oct",
 			Cost:    5,
 			Owner:   stkCs["s team"]["ab"].Email,
 			Parents: []string{"A"},
 		},
 		"AC": &thInfo{
 			Name:    "AC",
-			Iter:    "2020 Oct",
+			Iter:    "2020-10 Oct",
 			Cost:    5,
 			Owner:   stkCs["s team"]["ab"].Email,
 			Parents: []string{"A"},
 		},
 		"B": &thInfo{
 			Name:  "B",
-			Iter:  "2020 Q4",
+			Iter:  "2020-12 Dec",
 			Cost:  10,
 			Owner: stkCs["s team"]["aa"].Email,
 		},

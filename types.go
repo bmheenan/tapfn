@@ -2,6 +2,7 @@ package tapfn
 
 import (
 	"errors"
+	"time"
 
 	"github.com/bmheenan/tapdb"
 	"github.com/bmheenan/taps"
@@ -25,6 +26,17 @@ type TapController interface {
 
 	// GetStk gets the information for the stakeholder with the given `email`
 	GetStk(email string) (*taps.Stakeholder, error)
+
+	// iterationsget.go
+
+	// GetItersForStk returns all iterations relevant to the given stakeholder `stk`, including those with a thread that
+	// `stk` is a stakeholder for, plus Inbox, the current iteration, the next one, and Backlog
+	GetItersForStk(stk string) (iters []string, err error)
+
+	// GetItersForStk returns all iterations relevant to the given thread `parent`, including those with a thread
+	// that's a child of `parent`, plus Inbox, the current iteration, the next one, and Backlog. They will be in the
+	// cadence of `parent`'s owner
+	GetItersForParent(parent int64) (iters []string, err error)
 
 	// threadsget.go
 
@@ -62,5 +74,6 @@ type TapController interface {
 var ErrNotFound = errors.New("Not found")
 
 type cnTapdb struct {
-	db tapdb.DBInterface
+	db           tapdb.DBInterface
+	timeOverride time.Time // For testing
 }

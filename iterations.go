@@ -23,7 +23,13 @@ func iterRequired(neededBy string, cadence taps.Cadence) (string, error) {
 // If you have a thread that will be done by `doneBy`, this returns which iteration you can expect it in, with a cadence
 // matching `cadence`
 func iterResulting(doneBy string, cadence taps.Cadence) (string, error) {
-	endDt, errED := getEndDate(doneBy)
+	if doneBy == "Inbox" {
+		return "Inbox", nil
+	}
+	if doneBy == "Backlog" {
+		return "Backlog", nil
+	}
+	endDt, errED := iterEndDate(doneBy)
 	if errED != nil {
 		return "", fmt.Errorf("Could not get end date of given iteration: %v", errED)
 	}
@@ -34,20 +40,16 @@ func iterResulting(doneBy string, cadence taps.Cadence) (string, error) {
 	return iter, nil
 }
 
-func getEndDate(iter string) (time.Time, error) {
-	yrly, errY := regexp.MatchString("^[0-9]{4}$", iter)
-	if errY != nil {
-		return time.Time{}, fmt.Errorf("Could not check if iteration was yearly: %v", errY)
+func iterEndDate(iter string) (time.Time, error) {
+	cadence, valid := iterCadence(iter)
+	if !valid {
+		return time.Time{}, fmt.Errorf("%v was not a valid iteration", iter)
 	}
-	if yrly {
+	if cadence == taps.Yearly {
 		y, _ := strconv.Atoi(iter)
 		return time.Date(y, time.Month(12), 31, 0, 0, 0, 0, time.UTC), nil
 	}
-	qrly, errQ := regexp.MatchString("^[0-9]{4} [Qq][1-4]$", iter)
-	if errQ != nil {
-		return time.Time{}, fmt.Errorf("Could not check if iteration was quarterly: %v", errQ)
-	}
-	if qrly {
+	if cadence == taps.Quarterly {
 		y, _ := strconv.Atoi(iter[0:4])
 		q, _ := strconv.Atoi(iter[6:])
 		var m, d int
@@ -66,13 +68,9 @@ func getEndDate(iter string) (time.Time, error) {
 		}
 		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
 	}
-	mnly, errM := regexp.MatchString("^[0-9]{4} [A-Za-z]{3}$", iter)
-	if errM != nil {
-		return time.Time{}, fmt.Errorf("Could not check if iteration was monthly: %v", errM)
-	}
-	if mnly {
+	if cadence == taps.Monthly {
 		y, _ := strconv.Atoi(iter[0:4])
-		mo := strings.ToLower(iter[5:])
+		mo := strings.ToLower(iter[8:])
 		var d, m int
 		if mo == "jan" {
 			m = 1
@@ -119,15 +117,11 @@ func getEndDate(iter string) (time.Time, error) {
 		}
 		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
 	}
-	bwly, errB := regexp.MatchString("^[0-9]{4} [Ww][0-9]{1,2}$", iter)
-	if errB != nil {
-		return time.Time{}, fmt.Errorf("Could not check if iteration was biweekly: %v", errB)
-	}
-	if bwly {
+	if cadence == taps.Biweekly {
 		// TODO implement biweekly iterations
 		return time.Time{}, errors.New("Biweekly iterations not implemented")
 	}
-	return time.Time{}, fmt.Errorf("Could not understand the IterTiming of iteration: %v", iter)
+	return time.Time{}, fmt.Errorf("Could not match the cadence of %v", iter)
 }
 
 func iterContaining(date time.Time, cadence taps.Cadence) (string, error) {
@@ -146,7 +140,56 @@ func iterContaining(date time.Time, cadence taps.Cadence) (string, error) {
 		}
 	} else if cadence == taps.Monthly {
 		mos := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
-		return fmt.Sprintf("%v %v", y, mos[date.Month()-1]), nil
+		return fmt.Sprintf("%v-%02d %v", y, date.Month(), mos[date.Month()-1]), nil
 	}
 	return "", errors.New("Biweekly iterations not implemented")
+}
+
+func iterNext(in string) (out string, err error) {
+	end, errE := iterEndDate(in)
+	if errE != nil {
+		err = fmt.Errorf("Could not get end date of %v: %v", in, errE)
+		return
+	}
+	start := end.AddDate(0, 0, 1) // Add 1 day to get the first day of the next iteration
+	cadence, valid := iterCadence(in)
+	if !valid {
+		err = fmt.Errorf("Could not get cadence of %v: invalid iteration", in)
+		return
+	}
+	out, err = iterContaining(start, cadence)
+	if err != nil {
+		err = fmt.Errorf("Could not get the iteration containing start date %v: %v", start, err)
+		return
+	}
+	return
+}
+
+func iterCadence(iter string) (cadence taps.Cadence, valid bool) {
+	yrly, _ := regexp.MatchString("^[0-9]{4}$", iter)
+	if yrly {
+		cadence = taps.Yearly
+		valid = true
+		return
+	}
+	qrly, _ := regexp.MatchString("^[0-9]{4} [Qq][1-4]$", iter)
+	if qrly {
+		cadence = taps.Quarterly
+		valid = true
+		return
+	}
+	mnly, _ := regexp.MatchString("^[0-9]{4}-[0-9]{2} [A-Za-z]{3}$", iter)
+	if mnly {
+		cadence = taps.Monthly
+		valid = true
+		return
+	}
+	bwly, _ := regexp.MatchString("^[0-9]{4} [Ww][0-9]{1,2}$", iter)
+	if bwly {
+		cadence = taps.Biweekly
+		valid = true
+		return
+	}
+	valid = false
+	return
 }

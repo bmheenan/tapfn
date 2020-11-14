@@ -30,7 +30,7 @@ func TestNewThreadWithParent(t *testing.T) {
 		t.Errorf("Could not set up test: %v", errSet)
 		return
 	}
-	id, errN := cn.NewThread("AA", stks["a"].Email, "2020 Oct", 1, []int64{ths["A"].ID}, nil)
+	id, errN := cn.NewThread("AA", stks["a"].Email, "2020-10 Oct", 1, []int64{ths["A"].ID}, nil)
 	if errN != nil {
 		t.Errorf("Could not make thread with parent: %v", errN)
 		return
@@ -65,7 +65,7 @@ func TestMoveThreadForStk(t *testing.T) {
 		t.Errorf("Could not move AC before AB: %v", errM)
 		return
 	}
-	thrs, errThs := cn.GetThreadrowsByStkIter(stks["ab"].Email, "2020 Oct")
+	thrs, errThs := cn.GetThreadrowsByStkIter(stks["ab"].Email, "2020-10 Oct")
 	if errThs != nil {
 		t.Errorf("Could not get threadrows for %v 2020 Oct: %v", stks["ab"].Email, errThs)
 	}
@@ -93,7 +93,7 @@ func TestMoveThreadToEndForStk(t *testing.T) {
 		t.Errorf("Could not move AC before AB: %v", errM)
 		return
 	}
-	thrs, errThs := cn.GetThreadrowsByStkIter(stks["ab"].Email, "2020 Oct")
+	thrs, errThs := cn.GetThreadrowsByStkIter(stks["ab"].Email, "2020-10 Oct")
 	if errThs != nil {
 		t.Errorf("Could not get threadrows for %v 2020 Oct: %v", stks["ab"].Email, errThs)
 	}
