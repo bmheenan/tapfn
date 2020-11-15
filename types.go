@@ -43,8 +43,14 @@ type TapController interface {
 	// GetThread returns the info for the given thread
 	GetThread(id int64) (th *taps.Thread, err error)
 
+	// GetThreadrowsByStkIter gets all threads where `stk` is a stakeholder in iteration `iter`. They're returned as
+	// threadrows scoped to `stk`, so they use `stk`'s ordering and only show costs for the pieces that `stk` owns
+	// (including team members)
 	GetThreadrowsByStkIter(stk, iter string) (ths []*taps.Threadrow, err error)
 
+	// GetThreadrowsByParentIter gets all threads that are children of `parent`, and recursively gets their children
+	// until all descendants are fetched. They're returned as threadrows scoped to `parent`, so they use `parent`'s
+	// order, and display their total cost
 	GetThreadrowsByParentIter(parent int64, iter string) (ths []*taps.Threadrow, err error)
 
 	// threadsnew.go
