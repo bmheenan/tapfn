@@ -27,6 +27,9 @@ type TapController interface {
 	// GetStk gets the information for the stakeholder with the given `email`
 	GetStk(email string) (*taps.Stakeholder, error)
 
+	// GetStksForDomain returns a hierarchical view of all stakeholder in `domain`
+	GetStksForDomain(domain string) (teams []*taps.Team, err error)
+
 	// iterationsget.go
 
 	// GetItersForStk returns all iterations relevant to the given stakeholder `stk`, including those with a thread that

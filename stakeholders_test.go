@@ -85,3 +85,36 @@ func TestNewWithParentAndGetStk(t *testing.T) {
 		return
 	}
 }
+
+func TestGetStksForDomain(t *testing.T) {
+	cn, _, _, errSet := setupTest("s team")
+	if errSet != nil {
+		t.Errorf("Could not setup test: %v", errSet)
+		return
+	}
+	stks, err := cn.GetStksForDomain("example.com")
+	if err != nil {
+		t.Errorf("Could not get all stakeholders: %v", err)
+		return
+	}
+	if len(stks) != 2 {
+		t.Errorf("Expected len 2; got %v", len(stks))
+		return
+	}
+	if stks[0].Stk.Name != "Team a" {
+		t.Errorf("Expected Team a; got %v", stks[0].Stk.Name)
+		return
+	}
+	if stks[0].Members[0].Stk.Name != "Person aa" {
+		t.Errorf("Expected Person aa; got %v", stks[0].Members[0].Stk.Name)
+		return
+	}
+	if stks[0].Members[1].Stk.Name != "Person ab" {
+		t.Errorf("Expected Person ab; got %v", stks[0].Members[1].Stk.Name)
+		return
+	}
+	if stks[1].Stk.Name != "Team b" {
+		t.Errorf("Expected Team b; got %v", stks[1].Stk.Name)
+		return
+	}
+}

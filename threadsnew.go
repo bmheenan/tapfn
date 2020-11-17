@@ -46,68 +46,32 @@ func (cn *cnTapdb) NewThread(name, owner, iter string, cost int, parents, childr
 }
 
 func (cn *cnTapdb) NewThreadHierLink(parent, child int64) error {
-	// Don't allow loops of dependencies in threads
 	des, errDes := cn.db.GetThreadDes(child)
 	if errDes != nil {
 		return fmt.Errorf("Could not get thread descendants: %v", errDes)
 	}
+	c := des[child]
 	ans, errAns := cn.db.GetThreadAns(parent)
 	if errAns != nil {
 		return fmt.Errorf("Could not get thread ancestors: %v", errAns)
 	}
-	for a := range ans {
-		if _, ok := des[a]; ok {
-			return fmt.Errorf("Cannot make %v a parent of %v because that would form a loop", parent, child)
-		}
+	p := ans[parent]
+	if _, ok := c.Parents[p.ID]; ok {
+		return nil
 	}
-	// Calculate the order and iteration the child will have in the context of this parent thread
-	oParts := strings.Split(ans[parent].Owner.Email, "@")
-	if len(oParts) != 2 {
-		return fmt.Errorf("Parent owner email address is invalid: %v", ans[parent].Owner)
+	if cn.wouldMakeLoop(ans, des) {
+		return fmt.Errorf("Cannot make %v a parent of %v because that would make a loop", parent, child)
 	}
-	po, errO := cn.db.GetStk(ans[parent].Owner.Email)
-	if errO != nil {
-		return fmt.Errorf("Could not get info for parent owner %v: %v", ans[parent].Owner, errO)
+	errLnk := cn.newThreadHierLinkForParent(p, c)
+	if errLnk != nil {
+		return fmt.Errorf("Could not link %v to %v: %v", parent, child, errLnk)
 	}
-	iter, errIt := iterResulting(des[child].Iter, po.Cadence)
-	if errIt != nil {
-		return fmt.Errorf("Could not convert iteration %v to %v: %v", des[child].Iter, po.Cadence, errIt)
-	}
-	thOrd, errThO := cn.db.GetOrdBeforeForParent(parent, iter, math.MaxInt32)
-	if errThO != nil {
-		return fmt.Errorf("Could not get thread order to insert: %v", errThO)
-	}
-	thOrd = thOrd + ((math.MaxInt32 - thOrd) / 2)
-	// Make the main link between the parent and child
-	errL := cn.db.NewThreadHierLink(parent, child, ans[parent].Iter, thOrd, oParts[1])
-	if errL != nil {
-		return fmt.Errorf("Could not link threads: %v", errL)
-	}
-	errB := cn.balanceParent(parent, iter)
-	if errB != nil {
-		return fmt.Errorf("Could not balance thread %v for iteration %v after linking: %v", parent, iter, errB)
-	}
-	// Recalculate the total cost for all ancestor threads, now that they have at least one new descendant
 	for _, a := range ans {
-		ds, errDs := cn.db.GetThreadDes(a.ID)
-		if errDs != nil {
-			return fmt.Errorf(
-				"Could not get descendants of ancestor %v to calculate its new total cost: %v",
-				a.ID,
-				errDs,
-			)
-		}
-		rnCost := 0
-		for _, d := range ds {
-			rnCost += d.CostDir
-		}
-		errUpC := cn.db.SetCostTot(a.ID, rnCost)
-		if errUpC != nil {
-			return fmt.Errorf("Could not update total cost for %v: %v", a.ID, errUpC)
+		errCTot := cn.recalcCostTot(a)
+		if errCTot != nil {
+			return fmt.Errorf("Could not update total cost of %v: %v", a.Name, errCTot)
 		}
 	}
-	// Calculate changes for each affected stakeholder. Anybody who's a stakeholder of at least one ancestor and at
-	// least one descendant will be affected by this link
 	ancStks := map[string](bool){}
 	desStks := map[string](bool){}
 	for _, th := range ans {
@@ -126,82 +90,159 @@ func (cn *cnTapdb) NewThreadHierLink(parent, child int64) error {
 			if errStk != nil {
 				return fmt.Errorf("Could not get stakeholder from ans+des stakholders: %v", errStk)
 			}
-			stkIter, errISk := iterResulting(des[child].Iter, stk.Cadence)
+			iter, errISk := iterResulting(c.Iter, stk.Cadence)
 			if errISk != nil {
-				return fmt.Errorf("Could not get iteration for stakeholder %v: %v", stkE, errISk)
+				return fmt.Errorf("Could not get iteration for stakeholder %v: %v", stk.Email, errISk)
 			}
-			chs, errCh := cn.db.GetThreadChildrenByStkIter([]int64{child}, stkE, stkIter)
-			if errCh != nil {
-				return fmt.Errorf("Could not get child threads: %v", errCh)
+			errCL := cn.crosslinkThreadsForStk(c, p, stk, iter)
+			if errCL != nil {
+				return fmt.Errorf("Could not crosslink parent %v with child %v: %v", p.Name, c.Name, errCL)
 			}
-			pas, errPa := cn.db.GetThreadParentsByStkIter([]int64{parent}, stkE, stkIter)
-			if errPa != nil {
-				return fmt.Errorf("Could not get parent threads: %v", errPa)
-			}
-			for _, c := range chs {
-				for _, p := range pas {
-					// Cross link all parents with all children
-					errLS := cn.db.NewThreadHierLinkForStk(p.ID, c.ID, stkE, stk.Domain)
-					if errLS != nil {
-						return fmt.Errorf(
-							"Could not link %v with %v for stakeholder %v: %v",
-							parent,
-							child,
-							stkE,
-							errLS,
-						)
-					}
-					// Unmark top level for the child; it's now nested under an ancestor thread
-					errTop := cn.db.SetTopForStk(c.ID, stkE, false)
-					if errTop != nil {
-						return fmt.Errorf("Could not mark thread %c as no longer on the top level: %v", c.ID, errTop)
-					}
-				}
-			}
-			// Each ancestor thread with this stakeholder needs to have its stakeholder cost recalculated for this
-			// iteration
 			for _, th := range ans {
-				if _, ok := th.Stks[stkE]; ok && th.Stks[stkE].Iter == stkIter {
-					ds, errDs := cn.db.GetThreadDes(th.ID)
-					if errDs != nil {
-						return fmt.Errorf(
-							"Could not get descendants of ancestor %v to calculate its new total cost: %v",
-							th.ID,
-							errDs,
-						)
-					}
-					tms, errTm := cn.db.GetStkDes(stkE)
-					if errTm != nil {
-						return fmt.Errorf("Could not get team members of %v: %v", stkE, errTm)
-					}
-					rnCost := 0
-					for _, d := range ds {
-						if _, ok := tms[d.Owner.Email]; ok {
-							dIter, errDI := iterResulting(d.Iter, stk.Cadence)
-							if errDI != nil {
-								return fmt.Errorf("Could not convert descendant iteration: %v", errDI)
-							}
-							if dIter == stkIter {
-								rnCost += d.CostDir
-							}
-						}
-					}
-					errUpC := cn.db.SetCostForStk(th.ID, stkE, rnCost)
-					if errUpC != nil {
-						return fmt.Errorf(
-							"Could not update total cost for thread %v for stakeholder %v: %v",
-							th.ID,
-							stkE,
-							errUpC,
-						)
+				if _, ok := th.Stks[stkE]; ok {
+					errC := cn.recalcCostForStkIter(th, stk)
+					if errC != nil {
+						return fmt.Errorf("Could not recalc cost of ancestor %v: %v", th.Name, errC)
 					}
 				}
 			}
-			errBPt := cn.balanceStk(stkE, stkIter)
+			errBPt := cn.balanceStk(stk.Email, iter)
 			if errBPt != nil {
 				return fmt.Errorf("Could not balance threads after linking")
 			}
 		}
+	}
+	return nil
+}
+
+// Returns if linking a thread in `ans` to a thread in `des` would create a loop
+func (cn *cnTapdb) wouldMakeLoop(ans, des map[int64]*taps.Thread) bool {
+	for a := range ans {
+		if _, ok := des[a]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// Forms the core parent/child link, but does not handle stakeholders' contexts
+func (cn *cnTapdb) newThreadHierLinkForParent(parent, child *taps.Thread) error {
+	oParts := strings.Split(parent.Owner.Email, "@")
+	if len(oParts) != 2 {
+		return fmt.Errorf("Parent owner email address is invalid: %v", parent.Owner)
+	}
+	iter, errIt := iterResulting(child.Iter, parent.Owner.Cadence)
+	if errIt != nil {
+		return fmt.Errorf(
+			"Could not convert iteration %v to %v: %v",
+			child.Iter,
+			parent.Owner.Cadence,
+			errIt,
+		)
+	}
+	ord, errOrd := cn.db.GetOrdBeforeForParent(parent.ID, iter, math.MaxInt32)
+	if errOrd != nil {
+		return fmt.Errorf("Could not get thread order to insert: %v", errOrd)
+	}
+	ord = ord + ((math.MaxInt32 - ord) / 2)
+	errL := cn.db.NewThreadHierLink(parent.ID, child.ID, parent.Iter, ord, oParts[1])
+	if errL != nil {
+		return fmt.Errorf("Could not link threads: %v", errL)
+	}
+	errB := cn.balanceParent(parent.ID, iter)
+	if errB != nil {
+		return fmt.Errorf("Could not balance thread %v for iteration %v after linking: %v", parent, iter, errB)
+	}
+	return nil
+}
+
+// recalcCostTot updates the total cost of `thread` to be the sum of its direct cost and all its descendants
+func (cn *cnTapdb) recalcCostTot(thread *taps.Thread) error {
+	ds, errDs := cn.db.GetThreadDes(thread.ID)
+	if errDs != nil {
+		return fmt.Errorf(
+			"Could not get descendants of %v to calculate its new total cost: %v",
+			thread.ID,
+			errDs,
+		)
+	}
+	rnCost := 0
+	for _, d := range ds {
+		rnCost += d.CostDir
+	}
+	errUpC := cn.db.SetCostTot(thread.ID, rnCost)
+	if errUpC != nil {
+		return fmt.Errorf(
+			"Could not update total cost for thread %v: %v",
+			thread.ID,
+			errUpC,
+		)
+	}
+	return nil
+}
+
+// Links `c` and `p` together for stakeholder `stk` in iteration `iter`. Will form multiple links where necessary
+func (cn *cnTapdb) crosslinkThreadsForStk(c, p *taps.Thread, stk *taps.Stakeholder, iter string) error {
+	chs, errCh := cn.db.GetThreadChildrenByStkIter([]int64{c.ID}, stk.Email, iter)
+	if errCh != nil {
+		return fmt.Errorf("Could not get child threads: %v", errCh)
+	}
+	pas, errPa := cn.db.GetThreadParentsByStkIter([]int64{p.ID}, stk.Email, iter)
+	if errPa != nil {
+		return fmt.Errorf("Could not get parent threads: %v", errPa)
+	}
+	for _, c := range chs {
+		for _, p := range pas {
+			errLS := cn.db.NewThreadHierLinkForStk(p.ID, c.ID, stk.Email, stk.Domain)
+			if errLS != nil {
+				return fmt.Errorf(
+					"Could not link %v with %v for stakeholder %v: %v",
+					p.ID,
+					c.ID,
+					stk.Email,
+					errLS,
+				)
+			}
+		}
+	}
+	return nil
+}
+
+// recalcCostForStkIter updates the stakeholder cost for the given `thread`, `stk` - the cost
+// that that stakeholder (and all team members) own within the iteration of the thread
+func (cn *cnTapdb) recalcCostForStkIter(thread *taps.Thread, stk *taps.Stakeholder) error {
+	ds, errDs := cn.db.GetThreadDes(thread.ID)
+	if errDs != nil {
+		return fmt.Errorf(
+			"Could not get descendants of ancestor %v to calculate its new total cost: %v",
+			thread.ID,
+			errDs,
+		)
+	}
+	tms, errTm := cn.db.GetStkDes(stk.Email)
+	if errTm != nil {
+		return fmt.Errorf("Could not get team members of %v: %v", stk.Email, errTm)
+	}
+	rnCost := 0
+	for _, d := range ds {
+		if _, ok := tms[d.Owner.Email]; ok {
+			dIter, errDI := iterResulting(d.Iter, stk.Cadence)
+			if errDI != nil {
+				return fmt.Errorf("Could not convert descendant iteration: %v", errDI)
+			}
+			if dIter == thread.Stks[stk.Email].Iter {
+				rnCost += d.CostDir
+			}
+		}
+	}
+	errUpC := cn.db.SetCostForStk(thread.ID, stk.Email, rnCost)
+	if errUpC != nil {
+		return fmt.Errorf(
+			"Could not update total cost for thread %v for stakeholder %v: %v",
+			thread.ID,
+			stk.Email,
+			errUpC,
+		)
 	}
 	return nil
 }

@@ -152,7 +152,7 @@ var thCs = map[string](map[string]*thInfo){
 	"1 th": {
 		"A": &thInfo{
 			Name:  "A",
-			Iter:  "2020-10 Oct",
+			Iter:  "2020 Q1",
 			Cost:  1,
 			Owner: stkCs["1 th"]["a"].Email,
 		},
