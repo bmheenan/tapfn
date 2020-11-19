@@ -110,6 +110,14 @@ var stkCs = map[string](map[string]*stkInfo){
 			Cadence: taps.Quarterly,
 		},
 	},
+	"1 stk w ths": {
+		"a": &stkInfo{
+			Email:   "a@example.com",
+			Name:    "Person a",
+			Abbrev:  "a",
+			Cadence: taps.Monthly,
+		},
+	},
 	"s team": {
 		"a": &stkInfo{
 			Email:   "a@example.com",
@@ -155,6 +163,35 @@ var thCs = map[string](map[string]*thInfo){
 			Iter:  "2020 Q1",
 			Cost:  1,
 			Owner: stkCs["1 th"]["a"].Email,
+		},
+	},
+	"1 stk w ths": {
+		"A": &thInfo{
+			Name:  "A",
+			Iter:  "2020-11 Nov",
+			Cost:  1,
+			Owner: stkCs["1 stk w ths"]["a"].Email,
+		},
+		"AA": &thInfo{
+			Name:    "AA",
+			Iter:    "2020-11 Nov",
+			Cost:    1,
+			Owner:   stkCs["1 stk w ths"]["a"].Email,
+			Parents: []string{"A"},
+		},
+		"AB": &thInfo{
+			Name:    "AB",
+			Iter:    "2020-11 Nov",
+			Cost:    1,
+			Owner:   stkCs["1 stk w ths"]["a"].Email,
+			Parents: []string{"A"},
+		},
+		"AC": &thInfo{
+			Name:    "AC",
+			Iter:    "2020-11 Nov",
+			Cost:    1,
+			Owner:   stkCs["1 stk w ths"]["a"].Email,
+			Parents: []string{"A"},
 		},
 	},
 	"s team": {

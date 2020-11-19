@@ -41,6 +41,11 @@ type TapController interface {
 	// cadence of `parent`'s owner
 	GetItersForParent(parent int64) (iters []string, err error)
 
+	// threadsdelete.go
+
+	// DeleteThreadHierLinks removes all links from `child` to each of its parents that link it up to ancestor `anc`
+	DeleteThreadHierLinks(anc, child int64) error
+
 	// threadsget.go
 
 	// GetThread returns the info for the given thread
@@ -77,6 +82,11 @@ type TapController interface {
 	// for other stakeholders or any parents. `thread` will be moved immediately before `reference`, or to the end of
 	// the iteraton if `reference` == 0
 	MoveThreadForStk(thread, reference int64, stk string) error
+
+	// threadsset.go
+
+	// SetThreadIter moves `thread` and all descendants in the same iteration to iteration `iter`
+	SetThreadIter(thread int64, iter string) (err error)
 }
 
 // ErrNotFound indicates that no matching record was found when querying

@@ -100,7 +100,7 @@ func (cn *cnTapdb) NewThreadHierLink(parent, child int64) error {
 			}
 			for _, th := range ans {
 				if _, ok := th.Stks[stkE]; ok {
-					errC := cn.recalcCostForStkIter(th, stk)
+					errC := cn.recalcCostForStk(th, stk)
 					if errC != nil {
 						return fmt.Errorf("Could not recalc cost of ancestor %v: %v", th.Name, errC)
 					}
@@ -108,7 +108,7 @@ func (cn *cnTapdb) NewThreadHierLink(parent, child int64) error {
 			}
 			errBPt := cn.balanceStk(stk.Email, iter)
 			if errBPt != nil {
-				return fmt.Errorf("Could not balance threads after linking")
+				return fmt.Errorf("Could not balance threads after linking: %v", errBPt)
 			}
 		}
 	}
@@ -210,7 +210,7 @@ func (cn *cnTapdb) crosslinkThreadsForStk(c, p *taps.Thread, stk *taps.Stakehold
 
 // recalcCostForStkIter updates the stakeholder cost for the given `thread`, `stk` - the cost
 // that that stakeholder (and all team members) own within the iteration of the thread
-func (cn *cnTapdb) recalcCostForStkIter(thread *taps.Thread, stk *taps.Stakeholder) error {
+func (cn *cnTapdb) recalcCostForStk(thread *taps.Thread, stk *taps.Stakeholder) error {
 	ds, errDs := cn.db.GetThreadDes(thread.ID)
 	if errDs != nil {
 		return fmt.Errorf(

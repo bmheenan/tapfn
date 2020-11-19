@@ -179,3 +179,25 @@ func TestMoveThreadToEndForParent(t *testing.T) {
 		return
 	}
 }
+
+func TestDeleteThreadHierLinks(t *testing.T) {
+	cn, _, ths, err := setupTest("s team")
+	if err != nil {
+		t.Errorf("Could not setup test: %v", err)
+		return
+	}
+	err = cn.DeleteThreadHierLinks(ths["A"].ID, ths["AC"].ID)
+	if err != nil {
+		t.Errorf("Could not delete hier links: %v", err)
+		return
+	}
+	th, err := cn.GetThread(ths["AC"].ID)
+	if err != nil {
+		t.Errorf("Could not get thread AC: %v", err)
+		return
+	}
+	if _, ok := th.Parents[ths["A"].ID]; ok {
+		t.Errorf("Expected AC not to have parent A, but found it")
+		return
+	}
+}
