@@ -51,7 +51,7 @@ func (cn *cnTapdb) GetStk(email string) (*taps.Stakeholder, error) {
 	return pt, nil
 }
 
-func (cn *cnTapdb) GetStksForDomain(domain string) (teams []*taps.Team, err error) {
+func (cn *cnTapdb) GetStksForDomain(domain string) (teams []*taps.StkInHier, err error) {
 	teams, err = cn.db.GetStksForDomain(domain)
 	if err != nil {
 		err = fmt.Errorf("Could not get stakeholders for domain %v: %v", domain, err)

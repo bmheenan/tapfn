@@ -40,6 +40,8 @@ github.com/bmheenan/tapdb v0.0.0-20201116131815-613d7acea325 h1:oLSbIhY39tyykVMT
 github.com/bmheenan/tapdb v0.0.0-20201116131815-613d7acea325/go.mod h1:LcT2KD9F2CQiBaXstPfOfJqw28nhdO/lc0XpjZkNIvA=
 github.com/bmheenan/tapdb v0.0.0-20201119131348-f2b01248d4f1 h1:ACLOJvAYGEVHscZlNwqwuOQWtItVFfBcVaPEa5ztjP8=
 github.com/bmheenan/tapdb v0.0.0-20201119131348-f2b01248d4f1/go.mod h1:LcT2KD9F2CQiBaXstPfOfJqw28nhdO/lc0XpjZkNIvA=
+github.com/bmheenan/tapdb v0.0.0-20201121195308-b70de0120b3d h1:fOVLd+2iqrV08b7+yD14cAa1gfhojWb4kGjj3IAqRhA=
+github.com/bmheenan/tapdb v0.0.0-20201121195308-b70de0120b3d/go.mod h1:R3bXHEz/6h/AHgd9ce5GksK23Sia+MOBOKJZmexa4eM=
 github.com/bmheenan/taps v0.0.0-20201031141326-81b4c9251374 h1:j/d525E/jC2oRi4Lc02UC9g+miF7hqJ62W7ye/kh2d8=
 github.com/bmheenan/taps v0.0.0-20201031141326-81b4c9251374/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/taps v0.0.0-20201101235118-6f4b0edbd1dc h1:zqZ/R6+8W/FoPeiQDPY2jJDTKcHQ07cUqrTnXx74vYE=
@@ -48,6 +50,8 @@ github.com/bmheenan/taps v0.0.0-20201108125953-f12bf6f24309 h1:W0G7B/KC07W6G7XpH
 github.com/bmheenan/taps v0.0.0-20201108125953-f12bf6f24309/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/taps v0.0.0-20201115182215-c8ca0105b20e h1:URf8hFedaSdieHRFZA7v7Vh+rHTjs9OLDEk7ZHbbAOM=
 github.com/bmheenan/taps v0.0.0-20201115182215-c8ca0105b20e/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
+github.com/bmheenan/taps v0.0.0-20201121193918-489495a2b880 h1:yEovpg1qu9qqlFvr085PdJAKV1TphQ3qYWLKoARFU7I=
+github.com/bmheenan/taps v0.0.0-20201121193918-489495a2b880/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/tapstruct v0.0.0-20201017014047-020486e422ca h1:De8FpNdwq4DiDzLymlI+9lltj5kXezJ1B0JAzhpV8LI=
 github.com/bmheenan/tapstruct v0.0.0-20201017014047-020486e422ca/go.mod h1:MemFiXUUxznBu9YkVZnX2Wl7nSMAgMqgjBBKEobcTHY=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
