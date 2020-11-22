@@ -40,22 +40,28 @@ func (cn *cnTapdb) NewStk(
 	return nil
 }
 
-func (cn *cnTapdb) GetStk(email string) (*taps.Stakeholder, error) {
-	pt, err := cn.db.GetStk(email)
+func (cn *cnTapdb) GetStk(email string) (stk taps.Stakeholder, err error) {
+	stkp, err := cn.db.GetStk(email)
 	if errors.Is(err, tapdb.ErrNotFound) {
-		return nil, fmt.Errorf("Stakeholder not found: %w", ErrNotFound)
+		err = fmt.Errorf("Stakeholder not found: %w", ErrNotFound)
+		return
 	}
 	if err != nil {
-		return nil, fmt.Errorf("Could not get stakeholder: %v", err)
+		err = fmt.Errorf("Could not get stakeholder: %v", err)
+		return
 	}
-	return pt, nil
+	stk = *stkp
+	return
 }
 
-func (cn *cnTapdb) GetStksForDomain(domain string) (teams []*taps.StkInHier, err error) {
-	teams, err = cn.db.GetStksForDomain(domain)
+func (cn *cnTapdb) GetStksForDomain(domain string) (stks []taps.StkInHier, err error) {
+	stksp, err := cn.db.GetStksForDomain(domain)
 	if err != nil {
 		err = fmt.Errorf("Could not get stakeholders for domain %v: %v", domain, err)
 		return
+	}
+	for _, s := range stksp {
+		stks = append(stks, *s)
 	}
 	return
 }
