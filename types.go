@@ -61,6 +61,9 @@ type TapController interface {
 	// order, and display their total cost
 	GetThreadrowsByParentIter(parent int64, iter string) (ths []taps.Threadrow, err error)
 
+	// GetThreadrowsByChild gets all threads that are direct parents of the given `child` thread
+	GetThreadrowsByChild(child int64) (ths []taps.Threadrow, err error)
+
 	// threadsnew.go
 
 	// NewThread creates a new thread with the given information. `name` is the name of the thread. `owner` is the email

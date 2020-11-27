@@ -39,3 +39,15 @@ func (cn *cnTapdb) GetThreadrowsByParentIter(parent int64, iter string) (ths []t
 	}
 	return
 }
+
+func (cn *cnTapdb) GetThreadrowsByChild(child int64) (ths []taps.Threadrow, err error) {
+	thsp, err := cn.db.GetThreadrowsByChild(child)
+	if err != nil {
+		err = fmt.Errorf("Could not get threadrows for child %v: %v", child, err)
+		return
+	}
+	for _, t := range thsp {
+		ths = append(ths, *t)
+	}
+	return
+}
