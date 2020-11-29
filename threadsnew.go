@@ -145,7 +145,7 @@ func (cn *cnTapdb) newThreadHierLinkForParent(parent, child *taps.Thread) error 
 		return fmt.Errorf("Could not get thread order to insert: %v", errOrd)
 	}
 	ord = ord + ((math.MaxInt32 - ord) / 2)
-	errL := cn.db.NewThreadHierLink(parent.ID, child.ID, parent.Iter, ord, oParts[1])
+	errL := cn.db.NewThreadHierLink(parent.ID, child.ID, iter, ord, oParts[1])
 	if errL != nil {
 		return fmt.Errorf("Could not link threads: %v", errL)
 	}

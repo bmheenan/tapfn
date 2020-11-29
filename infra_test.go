@@ -3,6 +3,7 @@ package tapfn
 import (
 	"fmt"
 	"sort"
+	"testing"
 	"time"
 
 	"github.com/bmheenan/taps"
@@ -73,6 +74,29 @@ func setupTest(config string) (
 		db.timeOverride = time.Date(2020, 10, 1, 0, 0, 0, 0, time.UTC)
 	}
 	return
+}
+
+func expect(label string, expected, got interface{}, t *testing.T) {
+	switch x := expected.(type) {
+	case int:
+		if g, ok := got.(int); ok {
+			if x != g {
+				t.Fatalf("Expected %s %d; got %d", label, x, g)
+			}
+		} else {
+			t.Fatalf("Could not compare %T and %T", expected, got)
+		}
+	case string:
+		if g, ok := got.(string); ok {
+			if x != g {
+				t.Fatalf("Expected %s %s; got %s", label, x, g)
+			}
+		} else {
+			t.Fatalf("Could not compare %T and %T", expected, got)
+		}
+	default:
+		t.Fatalf("Could not comprare %T and %T", expected, got)
+	}
 }
 
 type stkInfo struct {
