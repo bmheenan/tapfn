@@ -5,44 +5,57 @@ import (
 	"math"
 )
 
-// MoveThreadParent moves the thread with id `thread` immediately before the thread with id `reference`, in the context
-// of the thread with id `parent`. `parent` must be a parent of the other two threads, and the two threads must be in
-// the same iteration
-// If `reference` = 0, `thread` will be moved to the end of the iteration
-func (cn *cnTapdb) MoveThreadForParent(thread, reference, parent int64) error {
+// MoveTo specifies the different anchors you can move a thread to within an iteration
+type MoveTo int
+
+const (
+	// MoveToStart moves the thread to the beginning of the iteration, igoring the reference
+	MoveToStart = iota
+	// MoveToEnd moves the thread to the end of the iteration, ignoring the reference
+	MoveToEnd
+	// MoveBeforeRef moves the thread to right before the given reference
+	MoveBeforeRef
+)
+
+func (cn *cnTapdb) MoveThreadForParent(thread, reference, parent int64, moveTo MoveTo) error {
 	var nOrd int
-	t, errT := cn.db.GetThread(thread)
-	if errT != nil {
-		return fmt.Errorf("Could not get thread for thread %v: %v", thread, errT)
+	t, err := cn.db.GetThread(thread)
+	if err != nil {
+		return fmt.Errorf("Could not get thread for thread %v: %v", thread, err)
 	}
-	p, errP := cn.db.GetThread(parent)
-	if errP != nil {
-		return fmt.Errorf("Could not get thread for parent thread %v: %v", parent, errP)
+	p, err := cn.db.GetThread(parent)
+	if err != nil {
+		return fmt.Errorf("Could not get thread for parent thread %v: %v", parent, err)
 	}
-	po, errPO := cn.db.GetStk(p.Owner.Email)
-	if errPO != nil {
-		return fmt.Errorf("Could not get stakeholder %v from parent owner: %v", p.Owner, errPO)
+	po, err := cn.db.GetStk(p.Owner.Email)
+	if err != nil {
+		return fmt.Errorf("Could not get stakeholder %v from parent owner: %v", p.Owner, err)
 	}
-	ti, errTI := iterResulting(t.Iter, po.Cadence)
-	if errTI != nil {
-		return fmt.Errorf("Could not get thread's iteration by the parent owner's cadence: %v", errTI)
+	ti, err := iterResulting(t.Iter, po.Cadence)
+	if err != nil {
+		return fmt.Errorf("Could not get thread's iteration by the parent owner's cadence: %v", err)
 	}
-	if reference == 0 {
-		// Put thread at the end of the iteration
-		ordB, errOrdB := cn.db.GetOrdBeforeForParent(parent, ti, math.MaxInt32)
-		if errOrdB != nil {
-			return fmt.Errorf("Could not get order of last thread in iteration under this parent: %v", errOrdB)
+	switch moveTo {
+	case MoveToStart:
+		ordA, err := cn.db.GetOrdAfterForParent(parent, ti, 0)
+		if err != nil {
+			return fmt.Errorf("Could not get order of first thread in this iteration under this parent: %v", err)
+		}
+		nOrd = ordA / 2
+	case MoveToEnd:
+		ordB, err := cn.db.GetOrdBeforeForParent(parent, ti, math.MaxInt32)
+		if err != nil {
+			return fmt.Errorf("Could not get order of last thread in iteration under this parent: %v", err)
 		}
 		nOrd = ordB + ((math.MaxInt32 - ordB) / 2)
-	} else {
-		// Put thread immediately before reference, if they're in the same iteration
-		r, errR := cn.db.GetThread(reference)
-		if errR != nil {
-			return fmt.Errorf("Could not get threadrel for reference thread %v: %v", reference, errR)
+	case MoveBeforeRef:
+		r, err := cn.db.GetThread(reference)
+		if err != nil {
+			return fmt.Errorf("Could not get threadrel for reference thread %v: %v", reference, err)
 		}
-		ri, errRI := iterResulting(r.Iter, po.Cadence)
-		if errRI != nil {
-			return fmt.Errorf("Could not get reference's iteration by the parent owner's cadence: %v", errRI)
+		ri, err := iterResulting(r.Iter, po.Cadence)
+		if err != nil {
+			return fmt.Errorf("Could not get reference's iteration by the parent owner's cadence: %v", err)
 		}
 		if ti != ri {
 			return fmt.Errorf(
@@ -55,52 +68,54 @@ func (cn *cnTapdb) MoveThreadForParent(thread, reference, parent int64) error {
 				ri,
 			)
 		}
-		ordB, errOrdB := cn.db.GetOrdBeforeForParent(parent, ti, r.Parents[parent].Ord)
-		if errOrdB != nil {
-			return fmt.Errorf("Could not get order of thread before reference under this parent: %v", errOrdB)
+		ordB, err := cn.db.GetOrdBeforeForParent(parent, ti, r.Parents[parent].Ord)
+		if err != nil {
+			return fmt.Errorf("Could not get order of thread before reference under this parent: %v", err)
 		}
 		nOrd = ordB + ((r.Parents[parent].Ord - ordB) / 2)
 	}
-	errM := cn.db.SetOrdForParent(thread, parent, nOrd)
-	if errM != nil {
-		return fmt.Errorf("Could not set new order for thread: %v", errM)
+	err = cn.db.SetOrdForParent(thread, parent, nOrd)
+	if err != nil {
+		return fmt.Errorf("Could not set new order for thread: %v", err)
 	}
 	return nil
 }
 
-// MoveThreadStakeholder moves the thread with id `thread` immediately before the thread with id `reference`, as long as
-// `stakeholder` is a stakeholder of both, and they appear in the same iteration for that stakeholder
-// If `reference` = 0, `thread` will be moved to the end of the iteration
-func (cn *cnTapdb) MoveThreadForStk(thread, reference int64, stkE string) error {
+func (cn *cnTapdb) MoveThreadForStk(thread, reference int64, stkE string, moveTo MoveTo) error {
 	var nOrd int
-	t, errT := cn.db.GetThread(thread)
-	if errT != nil {
-		return fmt.Errorf("Could not get thread %v: %v", thread, errT)
+	t, err := cn.db.GetThread(thread)
+	if err != nil {
+		return fmt.Errorf("Could not get thread %v: %v", thread, err)
 	}
-	stk, errPT := cn.db.GetStk(stkE)
-	if errPT != nil {
-		return fmt.Errorf("Could not get stakeholder %v: %v", stk, errPT)
+	stk, err := cn.db.GetStk(stkE)
+	if err != nil {
+		return fmt.Errorf("Could not get stakeholder %v: %v", stk, err)
 	}
-	ti, errTI := iterResulting(t.Iter, stk.Cadence)
-	if errTI != nil {
-		return fmt.Errorf("Could not get thread's iteration by the stakeholder's cadence: %v", errTI)
+	ti, err := iterResulting(t.Iter, stk.Cadence)
+	if err != nil {
+		return fmt.Errorf("Could not get thread's iteration by the stakeholder's cadence: %v", err)
 	}
-	if reference == 0 {
-		// Put thread at the end of the iteration
-		ordB, errOrdB := cn.db.GetOrdBeforeForStk(stkE, ti, math.MaxInt32)
-		if errOrdB != nil {
-			return fmt.Errorf("Could not get order of last thread in iteration for this stakeholder: %v", errOrdB)
+	switch moveTo {
+	case MoveToStart:
+		ordA, err := cn.db.GetOrdAfterForStk(stkE, ti, 0)
+		if err != nil {
+			return fmt.Errorf("Could not get order of first thread in the iteration for this stakeholder: %v", err)
+		}
+		nOrd = ordA / 2
+	case MoveToEnd:
+		ordB, err := cn.db.GetOrdBeforeForStk(stkE, ti, math.MaxInt32)
+		if err != nil {
+			return fmt.Errorf("Could not get order of last thread in iteration for this stakeholder: %v", err)
 		}
 		nOrd = ordB + ((math.MaxInt32 - ordB) / 2)
-	} else {
-		// Put thread immediately before reference, if they're in the same iteration
-		r, errR := cn.db.GetThread(reference)
-		if errR != nil {
-			return fmt.Errorf("Could not get threadrel for reference thread %v: %v", reference, errR)
+	case MoveBeforeRef:
+		r, err := cn.db.GetThread(reference)
+		if err != nil {
+			return fmt.Errorf("Could not get threadrel for reference thread %v: %v", reference, err)
 		}
-		ri, errRI := iterResulting(r.Iter, stk.Cadence)
-		if errRI != nil {
-			return fmt.Errorf("Could not get reference's iteration by the stakeholder's cadence: %v", errRI)
+		ri, err := iterResulting(r.Iter, stk.Cadence)
+		if err != nil {
+			return fmt.Errorf("Could not get reference's iteration by the stakeholder's cadence: %v", err)
 		}
 		if ti != ri {
 			return fmt.Errorf(
@@ -113,15 +128,15 @@ func (cn *cnTapdb) MoveThreadForStk(thread, reference int64, stkE string) error 
 				ri,
 			)
 		}
-		ordB, errOrdB := cn.db.GetOrdBeforeForStk(stkE, ti, r.Stks[stkE].Ord)
-		if errOrdB != nil {
-			return fmt.Errorf("Could not get order of thread before reference under this parent: %v", errOrdB)
+		ordB, err := cn.db.GetOrdBeforeForStk(stkE, ti, r.Stks[stkE].Ord)
+		if err != nil {
+			return fmt.Errorf("Could not get order of thread before reference under this parent: %v", err)
 		}
 		nOrd = ordB + ((r.Stks[stkE].Ord - ordB) / 2)
 	}
-	errM := cn.db.SetOrdForStk(thread, stkE, nOrd)
-	if errM != nil {
-		return fmt.Errorf("Could not set new order for thread: %v", errM)
+	err = cn.db.SetOrdForStk(thread, stkE, nOrd)
+	if err != nil {
+		return fmt.Errorf("Could not set new order for thread: %v", err)
 	}
 	return nil
 }

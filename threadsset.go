@@ -21,6 +21,13 @@ func (cn *cnTapdb) SetThreadIter(thID int64, iter string) error {
 	for _, d := range des {
 		if d.Iter == oldIter {
 			iterOwnr, err := iterRequired(iter, d.Owner.Cadence)
+			if iterOwnr == d.Iter {
+				break
+			}
+			up := true
+			if iterOwnr > d.Iter {
+				up = false
+			}
 			if err != nil {
 				return fmt.Errorf("Could not convert %v into owner's cadence for %v: %v", iter, d.Name, err)
 			}
@@ -38,6 +45,17 @@ func (cn *cnTapdb) SetThreadIter(thID int64, iter string) error {
 					return fmt.Errorf("Could not convert iteration for stakeholder %v: %v", stkE, err)
 				}
 				cn.db.SetIterForStk(d.ID, stkE, stkIter)
+				if up {
+					err = cn.MoveThreadForStk(d.ID, 0, stkE, MoveToEnd)
+					if err != nil {
+						return fmt.Errorf("Could not move thread to end of iteration: %v", err)
+					}
+				} else {
+					err = cn.MoveThreadForStk(d.ID, 0, stkE, MoveToStart)
+					if err != nil {
+						return fmt.Errorf("Could not move thread to start of iteration: %v", err)
+					}
+				}
 			}
 			for p := range d.Parents {
 				pTh, err := cn.db.GetThread(p)
@@ -51,6 +69,17 @@ func (cn *cnTapdb) SetThreadIter(thID int64, iter string) error {
 				err = cn.db.SetIterForParent(p, d.ID, paIter)
 				if err != nil {
 					return fmt.Errorf("Could not set iter for parent %v: %v", p, err)
+				}
+				if up {
+					err = cn.MoveThreadForParent(d.ID, 0, p, MoveToEnd)
+					if err != nil {
+						return fmt.Errorf("Could not move thread to end of iteration: %v", err)
+					}
+				} else {
+					err = cn.MoveThreadForParent(d.ID, 0, p, MoveToStart)
+					if err != nil {
+						return fmt.Errorf("Could not move thread to start of iteration: %v", err)
+					}
 				}
 			}
 			ans, errA := cn.db.GetThreadAns(d.ID)

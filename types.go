@@ -76,15 +76,17 @@ type TapController interface {
 
 	// threadsmove.go
 
-	// MoveThreadByParent changes the order of a `thread` with respect to a `parent`. It doesn't affect the order for
-	// other parents or any stakeholders. `thread` will be moved immediately before `reference`, or to the end of the
-	// iteraton if `reference` == 0
-	MoveThreadForParent(thread, reference, parent int64) error
+	// MoveThreadParent moves the thread with id `thread` in the context of the thread with id `parent`. `parent` must be a
+	// parent of the other two threads, and the two threads must be in the same iteration
+	// You can move the thread to the start or end of the iteration, or immediately before the reference thread, depending
+	// on the value of `anchor`
+	MoveThreadForParent(thread, reference, parent int64, moveTo MoveTo) error
 
-	// MoveThreadByStk changes the order of a `thread` with respect to a stakeholder `stk`. It doesn't affect the order
-	// for other stakeholders or any parents. `thread` will be moved immediately before `reference`, or to the end of
-	// the iteraton if `reference` == 0
-	MoveThreadForStk(thread, reference int64, stk string) error
+	// MoveThreadStakeholder moves the thread with id `thread` within its iteration in the context of `stkE`.
+	// `stakeholder` is a stakeholder of the thread. If moveTo = MoveToStart or MoveToEnd, the thread will be moved to the
+	// start or end of the iteration. If moveTo = MoveBeforeRef, `reference` must be a thread with the same iteration and
+	// stakeholder, and `thread` will be moved immediately before it.
+	MoveThreadForStk(thread, reference int64, stk string, moveTo MoveTo) error
 
 	// threadsset.go
 
