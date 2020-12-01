@@ -7,6 +7,7 @@ import (
 )
 
 func (cn *cnTapdb) SetThreadIter(thID int64, iter string) error {
+	// TODO set order for stks and parents
 	th, err := cn.db.GetThread(thID)
 	if err != nil {
 		return fmt.Errorf("Could not get thread %v: %v", thID, err)
@@ -26,6 +27,31 @@ func (cn *cnTapdb) SetThreadIter(thID int64, iter string) error {
 			err = cn.db.SetIter(d.ID, iterOwnr)
 			if err != nil {
 				return fmt.Errorf("Could not set iteration to %v for %v: %v", iterOwnr, th.Name, err)
+			}
+			for stkE := range d.Stks {
+				stk, err := cn.db.GetStk(stkE)
+				if err != nil {
+					return fmt.Errorf("Could not get stakeholder of descendant thread: %v", err)
+				}
+				stkIter, err := iterResulting(iter, stk.Cadence)
+				if err != nil {
+					return fmt.Errorf("Could not convert iteration for stakeholder %v: %v", stkE, err)
+				}
+				cn.db.SetIterForStk(d.ID, stkE, stkIter)
+			}
+			for p := range d.Parents {
+				pTh, err := cn.db.GetThread(p)
+				if err != nil {
+					return fmt.Errorf("Could not get parent thread %v: %v", p, err)
+				}
+				paIter, err := iterResulting(iter, pTh.Owner.Cadence)
+				if err != nil {
+					return fmt.Errorf("Could not get resulting iteration for parent: %v", err)
+				}
+				err = cn.db.SetIterForParent(p, d.ID, paIter)
+				if err != nil {
+					return fmt.Errorf("Could not set iter for parent %v: %v", p, err)
+				}
 			}
 			ans, errA := cn.db.GetThreadAns(d.ID)
 			if errA != nil {
