@@ -7,7 +7,6 @@ import (
 )
 
 func (cn *cnTapdb) SetThreadIter(thID int64, iter string) error {
-	// TODO set order for stks and parents
 	th, err := cn.db.GetThread(thID)
 	if err != nil {
 		return fmt.Errorf("Could not get thread %v: %v", thID, err)
@@ -82,6 +81,7 @@ func (cn *cnTapdb) SetThreadIter(thID int64, iter string) error {
 					}
 				}
 			}
+			cn.deleteObsoleteStkHierLinks(d)
 			ans, errA := cn.db.GetThreadAns(d.ID)
 			if errA != nil {
 				return fmt.Errorf("Could not get ancestors of %v: %v", d.Name, err)

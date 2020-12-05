@@ -46,14 +46,14 @@ func (cn *cnTapdb) NewThread(name, owner, iter string, cost int, parents, childr
 }
 
 func (cn *cnTapdb) NewThreadHierLink(parent, child int64) error {
-	des, errDes := cn.db.GetThreadDes(child)
-	if errDes != nil {
-		return fmt.Errorf("Could not get thread descendants: %v", errDes)
+	des, err := cn.db.GetThreadDes(child)
+	if err != nil {
+		return fmt.Errorf("Could not get thread descendants: %v", err)
 	}
 	c := des[child]
-	ans, errAns := cn.db.GetThreadAns(parent)
-	if errAns != nil {
-		return fmt.Errorf("Could not get thread ancestors: %v", errAns)
+	ans, err := cn.db.GetThreadAns(parent)
+	if err != nil {
+		return fmt.Errorf("Could not get thread ancestors: %v", err)
 	}
 	p := ans[parent]
 	if _, ok := c.Parents[p.ID]; ok {
@@ -62,55 +62,19 @@ func (cn *cnTapdb) NewThreadHierLink(parent, child int64) error {
 	if cn.wouldMakeLoop(ans, des) {
 		return fmt.Errorf("Cannot make %v a parent of %v because that would make a loop", parent, child)
 	}
-	errLnk := cn.newThreadHierLinkForParent(p, c)
-	if errLnk != nil {
-		return fmt.Errorf("Could not link %v to %v: %v", parent, child, errLnk)
+	err = cn.newThreadHierLinkForParent(p, c)
+	if err != nil {
+		return fmt.Errorf("Could not link %v to %v: %v", parent, child, err)
 	}
 	for _, a := range ans {
-		errCTot := cn.recalcCostTot(a)
-		if errCTot != nil {
-			return fmt.Errorf("Could not update total cost of %v: %v", a.Name, errCTot)
+		err = cn.recalcCostTot(a)
+		if err != nil {
+			return fmt.Errorf("Could not update total cost of %v: %v", a.Name, err)
 		}
 	}
-	ancStks := map[string](bool){}
-	desStks := map[string](bool){}
-	for _, th := range ans {
-		for stk := range th.Stks {
-			ancStks[stk] = true
-		}
-	}
-	for _, th := range des {
-		for stk := range th.Stks {
-			desStks[stk] = true
-		}
-	}
-	for stkE := range ancStks {
-		if _, ok := desStks[stkE]; ok {
-			stk, errStk := cn.db.GetStk(stkE)
-			if errStk != nil {
-				return fmt.Errorf("Could not get stakeholder from ans+des stakholders: %v", errStk)
-			}
-			iter, errISk := iterResulting(c.Iter, stk.Cadence)
-			if errISk != nil {
-				return fmt.Errorf("Could not get iteration for stakeholder %v: %v", stk.Email, errISk)
-			}
-			errCL := cn.crosslinkThreadsForStk(c, p, stk, iter)
-			if errCL != nil {
-				return fmt.Errorf("Could not crosslink parent %v with child %v: %v", p.Name, c.Name, errCL)
-			}
-			for _, th := range ans {
-				if _, ok := th.Stks[stkE]; ok {
-					errC := cn.recalcCostForStk(th, stk)
-					if errC != nil {
-						return fmt.Errorf("Could not recalc cost of ancestor %v: %v", th.Name, errC)
-					}
-				}
-			}
-			errBPt := cn.balanceStk(stk.Email, iter)
-			if errBPt != nil {
-				return fmt.Errorf("Could not balance threads after linking: %v", errBPt)
-			}
-		}
+	err = cn.makeThreadStkHierLinksForPair(p, c, ans, des)
+	if err != nil {
+		return fmt.Errorf("Could not make stakeholder thread hierarchy links: %v", err)
 	}
 	return nil
 }
@@ -152,6 +116,128 @@ func (cn *cnTapdb) newThreadHierLinkForParent(parent, child *taps.Thread) error 
 	errB := cn.balanceParent(parent.ID, iter)
 	if errB != nil {
 		return fmt.Errorf("Could not balance thread %v for iteration %v after linking: %v", parent, iter, errB)
+	}
+	return nil
+}
+
+// Removes all stk thread hier links between a thread and its ancestors/descedants if those threads are in different
+// iterations or at least one of them doesn't have the given stakeholder
+func (cn *cnTapdb) deleteObsoleteStkHierLinks(th *taps.Thread) error {
+	for stkE := range th.Stks {
+		ans, err := cn.db.GetThreadAns(th.ID)
+		if err != nil {
+			return fmt.Errorf("Could not get thread ancestors: %v", err)
+		}
+		des, err := cn.db.GetThreadDes(th.ID)
+		if err != nil {
+			return fmt.Errorf("Could not get thread descendants: %v", err)
+		}
+		type rel struct {
+			thread *taps.Thread
+			anc    bool
+		}
+		rels := []rel{}
+		for _, a := range ans {
+			rels = append(rels, rel{
+				thread: a,
+				anc:    true,
+			})
+		}
+		for _, d := range des {
+			rels = append(rels, rel{
+				thread: d,
+				anc:    false,
+			})
+		}
+		for _, r := range rels {
+			del := false
+			if _, ok := r.thread.Stks[stkE]; !ok {
+				del = true
+			}
+			if _, ok := th.Stks[stkE]; !ok {
+				del = true
+			}
+			if !del && th.Stks[stkE].Iter != r.thread.Stks[stkE].Iter {
+				del = true
+			}
+			if del && r.anc {
+				err = cn.db.DeleteThreadHierLinkForStk(r.thread.ID, th.ID, stkE)
+				if err != nil {
+					return fmt.Errorf("Could not delete thread hier link: %v", err)
+				}
+			} else if del {
+				err = cn.db.DeleteThreadHierLinkForStk(th.ID, r.thread.ID, stkE)
+				if err != nil {
+					return fmt.Errorf("Could not delete thread hier link: %v", err)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (cn *cnTapdb) makeAllThreadStkHierLinks(th *taps.Thread) error {
+	return errors.New("Not implemented")
+}
+
+func (cn *cnTapdb) makeThreadStkHierLinksForPair(
+	p *taps.Thread,
+	c *taps.Thread,
+	ans map[int64]*taps.Thread,
+	des map[int64]*taps.Thread,
+) error {
+	ancStks := map[string](bool){}
+	desStks := map[string](bool){}
+	for _, th := range ans {
+		for stk := range th.Stks {
+			ancStks[stk] = true
+		}
+	}
+	for _, th := range des {
+		for stk := range th.Stks {
+			desStks[stk] = true
+		}
+	}
+	for stkE := range ancStks {
+		if _, ok := desStks[stkE]; ok {
+			err := cn.makeThreadHierLinksForStk(p, c, stkE)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (cn *cnTapdb) makeThreadHierLinksForStk(p *taps.Thread, c *taps.Thread, stkE string) error {
+	stk, err := cn.db.GetStk(stkE)
+	if err != nil {
+		return fmt.Errorf("Could not get stakeholder from ans+des stakholders: %v", err)
+	}
+	iter, err := iterResulting(c.Iter, stk.Cadence)
+	if err != nil {
+		return fmt.Errorf("Could not get iteration for stakeholder %v: %v", stk.Email, err)
+	}
+	ans, err := cn.db.GetThreadAns(p.ID)
+	if err != nil {
+		return fmt.Errorf("Could not get ancestors of thread: %v", err)
+	}
+	err = cn.crosslinkThreadsForStk(c, p, stk, iter)
+	if err != nil {
+		return fmt.Errorf("Could not crosslink parent %v with child %v: %v", p.Name, c.Name, err)
+	}
+	for _, th := range ans {
+		if _, ok := th.Stks[stkE]; ok {
+			err = cn.recalcCostForStk(th, stk)
+			if err != nil {
+				return fmt.Errorf("Could not recalc cost of ancestor %v: %v", th.Name, err)
+			}
+		}
+	}
+	err = cn.balanceStk(stk.Email, iter)
+	if err != nil {
+		return fmt.Errorf("Could not balance threads after linking: %v", err)
 	}
 	return nil
 }

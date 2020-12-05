@@ -78,3 +78,22 @@ func TestSetIterStkPa(t *testing.T) {
 		t.Fatalf("Expected length %d; got %d", x, g)
 	}
 }
+
+func TestMoveAndParentThreadForStk(t *testing.T) {
+	cn, stks, ths, err := setupTest("1 stk w ths in diff iters")
+	if err != nil {
+		t.Fatalf("Could not set up test: %v", err)
+	}
+	err = cn.NewThreadHierLink(ths["A"].ID, ths["B"].ID)
+	if err != nil {
+		t.Fatalf("Could not make parent link: %v", err)
+	}
+	err = cn.SetThreadIter(ths["B"].ID, "2020-10 Oct")
+	if err != nil {
+		t.Fatalf("Could not move iteration: %v", err)
+	}
+	res, err := cn.GetThreadrowsByStkIter(stks["a"].Email, "2020-10 Oct")
+	if x, g := 1, len(res); x != g {
+		t.Fatalf("Expected %d threadrows; got %d", x, g)
+	}
+}
