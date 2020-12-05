@@ -6,11 +6,24 @@ import (
 	"strings"
 
 	"github.com/bmheenan/tapdb"
-
 	"github.com/bmheenan/taps"
 )
 
-func (cn *cnTapdb) NewStk(
+func (cn *cnTapdb) Stk(email string) (stk taps.Stakeholder, err error) {
+	stkp, err := cn.db.GetStk(email)
+	if errors.Is(err, tapdb.ErrNotFound) {
+		err = fmt.Errorf("Stakeholder not found: %w", ErrNotFound)
+		return
+	}
+	if err != nil {
+		err = fmt.Errorf("Could not get stakeholder: %v", err)
+		return
+	}
+	stk = *stkp
+	return
+}
+
+func (cn *cnTapdb) StkNew(
 	email,
 	name,
 	abbrev,
@@ -19,7 +32,8 @@ func (cn *cnTapdb) NewStk(
 	cadence taps.Cadence,
 	parents []string,
 ) error {
-	// TODO: Check arguments
+	// TODO check arguments
+	// TODO return special error if it already exists
 	if email == "" {
 		return errors.New("Email cannot be blank")
 	}
@@ -40,25 +54,10 @@ func (cn *cnTapdb) NewStk(
 	return nil
 }
 
-func (cn *cnTapdb) GetStk(email string) (stk taps.Stakeholder, err error) {
-	stkp, err := cn.db.GetStk(email)
-	if errors.Is(err, tapdb.ErrNotFound) {
-		err = fmt.Errorf("Stakeholder not found: %w", ErrNotFound)
-		return
-	}
-	if err != nil {
-		err = fmt.Errorf("Could not get stakeholder: %v", err)
-		return
-	}
-	stk = *stkp
-	return
-}
-
-func (cn *cnTapdb) GetStksForDomain(domain string) (stks []taps.StkInHier, err error) {
+func (cn *cnTapdb) StksByDomain(domain string) (stks []taps.StkInHier) {
 	stksp, err := cn.db.GetStksForDomain(domain)
 	if err != nil {
-		err = fmt.Errorf("Could not get stakeholders for domain %v: %v", domain, err)
-		return
+		panic(fmt.Sprintf("Could not get stakeholders for domain %v: %v", domain, err))
 	}
 	for _, s := range stksp {
 		stks = append(stks, *s)

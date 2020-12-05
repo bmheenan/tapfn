@@ -20,19 +20,19 @@
     db.UnlinkThreads(parent, child)
     for ancestor in db.GetAncestors(parent):
         **recalcTotalCost**(ancestor)
-    **recalcStakeholderCosts**(parent)
+    **recalcAllStakeholderCosts**(parent)
 
 **AddStakeholderToThread**(thread, stakeholder):
     iter = **iterResulting**(stakeholder.Cadence, thread.Iter)
     db.AddStakeholderToThread(thread, stakeholder, iter, MAX)
     **balanceStakeholder**(stakeholder, iter)
-    **recalcStakeholderCosts**(parent)
+    **recalcAllStakeholderCosts**(thread)
 
 **RemoveStakeholderFromThread**(thread, stakeholder):
     if thread.Owner = stakeholder:
         error
     db.RemoveStakeholderFromThread(thread, stakeholder)
-    **recalcStakeholderCosts**(parent)
+    **recalcAllStakeholderCosts**(thread)
 
 **SetThreadIter**(thread, iter):
     for descendant in db.GetDescendants(thread):

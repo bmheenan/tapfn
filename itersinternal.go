@@ -1,9 +1,9 @@
 package tapfn
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -11,9 +11,53 @@ import (
 	"github.com/bmheenan/taps"
 )
 
+func (cn *cnTapdb) iterCurrent(cadence taps.Cadence) (iter string, err error) {
+	var d time.Time
+	if cn.timeOverride == (time.Time{}) {
+		d = time.Now()
+	} else {
+		d = cn.timeOverride
+	}
+	iter = iterContaining(d, cadence)
+	return
+}
+
+func (cn *cnTapdb) itersAddStd(in []string, cadence taps.Cadence) (out []string, err error) {
+	current, errCur := cn.iterCurrent(cadence)
+	if errCur != nil {
+		err = fmt.Errorf("Could not get current iteration: %v", errCur)
+		return
+	}
+	if !strIn(current, in) {
+		in = append(in, current)
+	}
+	next := iterNext(current)
+	if !strIn(next, in) {
+		in = append(in, next)
+	}
+	sort.Strings(in)
+	if !strIn("Inbox", in) {
+		in = append([]string{"Inbox"}, in...)
+	}
+	if !strIn("Backlog", in) {
+		in = append(in, "Backlog")
+	}
+	out = in
+	return
+}
+
+func strIn(s string, a []string) bool {
+	for _, x := range a {
+		if x == s {
+			return true
+		}
+	}
+	return false
+}
+
 // If you need a thread done by `neededBy`, being done by someone who plans by `cadence`, this returns the iteration
 // they must plan it for
-func iterRequired(neededBy string, cadence taps.Cadence) (string, error) {
+func iterRequired(neededBy string, cadence taps.Cadence) string {
 	// TODO This arguably should be a different implementation than iterResulting. Current implementation is not strict:
 	// it's possibly to land a thread later than the requested implementation, if at the end of the iteration. For now,
 	// good enough; it's usually right
@@ -22,32 +66,26 @@ func iterRequired(neededBy string, cadence taps.Cadence) (string, error) {
 
 // If you have a thread that will be done by `doneBy`, this returns which iteration you can expect it in, with a cadence
 // matching `cadence`
-func iterResulting(doneBy string, cadence taps.Cadence) (string, error) {
+func iterResulting(doneBy string, cadence taps.Cadence) string {
 	if doneBy == "Inbox" {
-		return "Inbox", nil
+		return "Inbox"
 	}
 	if doneBy == "Backlog" {
-		return "Backlog", nil
+		return "Backlog"
 	}
-	endDt, errED := iterEndDate(doneBy)
-	if errED != nil {
-		return "", fmt.Errorf("Could not get end date of given iteration: %v", errED)
-	}
-	iter, errIt := iterContaining(endDt, cadence)
-	if errIt != nil {
-		return "", fmt.Errorf("Could not get iteration from end date %v: %v", endDt, errIt)
-	}
-	return iter, nil
+	endDt := iterEndDate(doneBy)
+	iter := iterContaining(endDt, cadence)
+	return iter
 }
 
-func iterEndDate(iter string) (time.Time, error) {
+func iterEndDate(iter string) time.Time {
 	cadence, valid := iterCadence(iter)
 	if !valid {
-		return time.Time{}, fmt.Errorf("%v was not a valid iteration", iter)
+		panic(fmt.Sprintf("%v was not a valid iteration", iter))
 	}
 	if cadence == taps.Yearly {
 		y, _ := strconv.Atoi(iter)
-		return time.Date(y, time.Month(12), 31, 0, 0, 0, 0, time.UTC), nil
+		return time.Date(y, time.Month(12), 31, 0, 0, 0, 0, time.UTC)
 	}
 	if cadence == taps.Quarterly {
 		y, _ := strconv.Atoi(iter[0:4])
@@ -66,7 +104,7 @@ func iterEndDate(iter string) (time.Time, error) {
 			m = 12
 			d = 31
 		}
-		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
+		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC)
 	}
 	if cadence == taps.Monthly {
 		y, _ := strconv.Atoi(iter[0:4])
@@ -113,56 +151,46 @@ func iterEndDate(iter string) (time.Time, error) {
 			m = 12
 			d = 31
 		} else {
-			return time.Time{}, fmt.Errorf("Could not parse to a month: %v", mo)
+			panic(fmt.Sprintf("Could not parse to a month: %v", mo))
 		}
-		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC), nil
+		return time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC)
 	}
 	if cadence == taps.Biweekly {
 		// TODO implement biweekly iterations
-		return time.Time{}, errors.New("Biweekly iterations not implemented")
+		panic("Biweekly iterations not implemented")
 	}
-	return time.Time{}, fmt.Errorf("Could not match the cadence of %v", iter)
+	panic(fmt.Sprintf("Could not match the cadence of %v", iter))
 }
 
-func iterContaining(date time.Time, cadence taps.Cadence) (string, error) {
+func iterContaining(date time.Time, cadence taps.Cadence) string {
 	y := date.Year()
 	if cadence == taps.Yearly {
-		return fmt.Sprintf("%v", y), nil
+		return fmt.Sprintf("%v", y)
 	} else if cadence == taps.Quarterly {
 		if date.Month() <= 3 {
-			return fmt.Sprintf("%v Q1", y), nil
+			return fmt.Sprintf("%v Q1", y)
 		} else if date.Month() <= 6 {
-			return fmt.Sprintf("%v Q2", y), nil
+			return fmt.Sprintf("%v Q2", y)
 		} else if date.Month() <= 9 {
-			return fmt.Sprintf("%v Q3", y), nil
+			return fmt.Sprintf("%v Q3", y)
 		} else {
-			return fmt.Sprintf("%v Q4", y), nil
+			return fmt.Sprintf("%v Q4", y)
 		}
 	} else if cadence == taps.Monthly {
 		mos := []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
-		return fmt.Sprintf("%v-%02d %v", y, date.Month(), mos[date.Month()-1]), nil
+		return fmt.Sprintf("%v-%02d %v", y, date.Month(), mos[date.Month()-1])
 	}
-	return "", errors.New("Biweekly iterations not implemented")
+	panic("Biweekly iterations not implemented")
 }
 
-func iterNext(in string) (out string, err error) {
-	end, errE := iterEndDate(in)
-	if errE != nil {
-		err = fmt.Errorf("Could not get end date of %v: %v", in, errE)
-		return
-	}
+func iterNext(in string) string {
+	end := iterEndDate(in)
 	start := end.AddDate(0, 0, 1) // Add 1 day to get the first day of the next iteration
 	cadence, valid := iterCadence(in)
 	if !valid {
-		err = fmt.Errorf("Could not get cadence of %v: invalid iteration", in)
-		return
+		panic(fmt.Sprintf("Could not get cadence of %v: invalid iteration", in))
 	}
-	out, err = iterContaining(start, cadence)
-	if err != nil {
-		err = fmt.Errorf("Could not get the iteration containing start date %v: %v", start, err)
-		return
-	}
-	return
+	return iterContaining(start, cadence)
 }
 
 func iterCadence(iter string) (cadence taps.Cadence, valid bool) {

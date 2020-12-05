@@ -52,6 +52,12 @@ github.com/bmheenan/tapdb v0.0.0-20201127213226-285226729e1b h1:qytQ69kfY/wN2Fwf
 github.com/bmheenan/tapdb v0.0.0-20201127213226-285226729e1b/go.mod h1:R3bXHEz/6h/AHgd9ce5GksK23Sia+MOBOKJZmexa4eM=
 github.com/bmheenan/tapdb v0.0.0-20201201134149-6215701f04b6 h1:/JzF0YXfWXEd16LcC5geL0v7r69hiVTeO6+E+TopB3g=
 github.com/bmheenan/tapdb v0.0.0-20201201134149-6215701f04b6/go.mod h1:R3bXHEz/6h/AHgd9ce5GksK23Sia+MOBOKJZmexa4eM=
+github.com/bmheenan/tapdb v0.0.0-20201205011041-a2f116aaa340 h1:lJzS9d+wwiIQGbAAOMOhxmhnl30+HZRXc78e6SYQB/s=
+github.com/bmheenan/tapdb v0.0.0-20201205011041-a2f116aaa340/go.mod h1:R3bXHEz/6h/AHgd9ce5GksK23Sia+MOBOKJZmexa4eM=
+github.com/bmheenan/tapdb v0.0.0-20201205165705-2a19fcd641f4 h1:d/6rOC3Kn16+hFML682efbCUujHm7H3Fdga+vuOArSI=
+github.com/bmheenan/tapdb v0.0.0-20201205165705-2a19fcd641f4/go.mod h1:R3bXHEz/6h/AHgd9ce5GksK23Sia+MOBOKJZmexa4eM=
+github.com/bmheenan/tapdb v0.0.0-20201205171744-a415b780b03d h1:z6HTQmi7H2FVg5+lRJo4TS40QhtGA3CfBXAH35ND2z0=
+github.com/bmheenan/tapdb v0.0.0-20201205171744-a415b780b03d/go.mod h1:R3bXHEz/6h/AHgd9ce5GksK23Sia+MOBOKJZmexa4eM=
 github.com/bmheenan/taps v0.0.0-20201031141326-81b4c9251374 h1:j/d525E/jC2oRi4Lc02UC9g+miF7hqJ62W7ye/kh2d8=
 github.com/bmheenan/taps v0.0.0-20201031141326-81b4c9251374/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/taps v0.0.0-20201101235118-6f4b0edbd1dc h1:zqZ/R6+8W/FoPeiQDPY2jJDTKcHQ07cUqrTnXx74vYE=
@@ -64,6 +70,8 @@ github.com/bmheenan/taps v0.0.0-20201121193918-489495a2b880 h1:yEovpg1qu9qqlFvr0
 github.com/bmheenan/taps v0.0.0-20201121193918-489495a2b880/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/taps v0.0.0-20201126194231-0a95db7341ec h1:dQDecEVHc9WmOLM+vv3dk7Inqeo4sejBl+3gotNDvC4=
 github.com/bmheenan/taps v0.0.0-20201126194231-0a95db7341ec/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
+github.com/bmheenan/taps v0.0.0-20201130221454-bce86514d19d h1:xCe99bd3EMubQZv20iJd24iDujn0m8MQRwWbB9yarKk=
+github.com/bmheenan/taps v0.0.0-20201130221454-bce86514d19d/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/tapstruct v0.0.0-20201017014047-020486e422ca h1:De8FpNdwq4DiDzLymlI+9lltj5kXezJ1B0JAzhpV8LI=
 github.com/bmheenan/tapstruct v0.0.0-20201017014047-020486e422ca/go.mod h1:MemFiXUUxznBu9YkVZnX2Wl7nSMAgMqgjBBKEobcTHY=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=
