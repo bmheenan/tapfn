@@ -29,6 +29,8 @@
     **recalcStakeholderCosts**(parent)
 
 **RemoveStakeholderFromThread**(thread, stakeholder):
+    if thread.Owner = stakeholder:
+        error
     db.RemoveStakeholderFromThread(thread, stakeholder)
     **recalcStakeholderCosts**(parent)
 
@@ -61,6 +63,7 @@
         **recalcAllStakeholderCosts**(descendant)
 
 **SetThreadOwner**(thread, owner):
+    **AddStakeholderToThread(thread, owner)
     db.SetThreadOwner(thread, owner)
     **recalcAllStakeholderCosts**(thread)
 
