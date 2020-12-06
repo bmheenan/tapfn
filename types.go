@@ -73,21 +73,15 @@ type TapController interface {
 	// ThreadrowsByChild returns all threadrows (in a flat list) that are parents of the given `child`
 	ThreadrowsByChild(child int64) []taps.Threadrow
 
+	// ThreadMoveForStk moves `thread` within its iteration as seen by stakeholder `stk`. Based on `moveTo`, it will be
+	// moved to the start or end of the iteration, or right before `reference`
+	ThreadMoveForStk(thread, reference int64, stkE string, moveTo MoveTo)
+
+	// ThreadMoveForParent moves `thread` within its iteration as seen by parent `parent`. Based on `moveTo`, it will be
+	// moved to the start or end of the iteration, or right before `reference`
+	ThreadMoveForParent(thread, reference, parent int64, moveTo MoveTo)
+
 	/*
-		// threadsmove.go
-
-		// MoveThreadParent moves the thread with id `thread` in the context of the thread with id `parent`. `parent` must be a
-		// parent of the other two threads, and the two threads must be in the same iteration
-		// You can move the thread to the start or end of the iteration, or immediately before the reference thread, depending
-		// on the value of `anchor`
-		MoveThreadForParent(thread, reference, parent int64, moveTo MoveTo) error
-
-		// MoveThreadStakeholder moves the thread with id `thread` within its iteration in the context of `stkE`.
-		// `stakeholder` is a stakeholder of the thread. If moveTo = MoveToStart or MoveToEnd, the thread will be moved to the
-		// start or end of the iteration. If moveTo = MoveBeforeRef, `reference` must be a thread with the same iteration and
-		// stakeholder, and `thread` will be moved immediately before it.
-		MoveThreadForStk(thread, reference int64, stk string, moveTo MoveTo) error
-
 		// threadsset.go
 
 		// SetThreadIter moves `thread` and all descendants in the same iteration to iteration `iter`
