@@ -62,7 +62,7 @@ func TestStkCostInDiffIters(t *testing.T) {
 	cn, stks, ths := setupTest("big tree")
 	cn.ThreadSetIter(ths["AB"].ID, "2020-09 Sep")
 	res := cn.ThreadrowsByStkIter(stks["a"].Email, "2020-10 Oct")
-	if x, g := 10, res[0].Cost; x != g {
+	if x, g := 5, res[0].Cost; x != g {
 		t.Fatalf("Expected A to have cost %v; got %v", x, g)
 	}
 }

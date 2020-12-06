@@ -49,5 +49,6 @@ func (cn *cnTapdb) ThreadSetIter(thread int64, iter string) {
 			cn.db.SetIterForStk(dec.ID, stk, iter)
 			cn.ThreadMoveForStk(dec.ID, 0, stk, place)
 		}
+		cn.recalcAllStkCosts(dec.ID)
 	}
 }
