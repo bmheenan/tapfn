@@ -15,10 +15,21 @@ func (cn *cnTapdb) recalcStkCost(id int64, stk string) {
 	if err != nil {
 		panic(fmt.Sprintf("Could not get stakeholder decendants of %v: %v", stk, err))
 	}
+	s, err := cn.Stk(stk)
+	if err != nil {
+		panic(fmt.Sprintf("Could not get stakeholder: %v", err))
+	}
+	th, err := cn.Thread(id)
+	if err != nil {
+		panic(fmt.Sprintf("Could not get thread: %v", err))
+	}
 	sum := 0
 	for _, dec := range cn.db.GetThreadDes(id) {
 		if _, ok := mbrs[dec.Owner.Email]; ok {
-			sum += dec.CostDir
+			iter := iterResulting(dec.Iter, s.Cadence)
+			if iter == th.Iter {
+				sum += dec.CostDir
+			}
 		}
 	}
 	err = cn.db.SetCostForStk(id, stk, sum)

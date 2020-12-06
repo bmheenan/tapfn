@@ -44,19 +44,10 @@ func TestNewThreadWithParent(t *testing.T) {
 	}
 }
 
-/*
-func TestDeleteThreadHierLinks(t *testing.T) {
-	cn, _, ths, err := setupTest("s team")
-	if err != nil {
-		t.Errorf("Could not setup test: %v", err)
-		return
-	}
-	err = cn.DeleteThreadHierLinks(ths["A"].ID, ths["AC"].ID)
-	if err != nil {
-		t.Errorf("Could not delete hier links: %v", err)
-		return
-	}
-	th, err := cn.GetThread(ths["AC"].ID)
+func TestThreadUnlink(t *testing.T) {
+	cn, _, ths := setupTest("s team")
+	cn.ThreadUnlink(ths["A"].ID, ths["AC"].ID)
+	th, err := cn.Thread(ths["AC"].ID)
 	if err != nil {
 		t.Errorf("Could not get thread AC: %v", err)
 		return
@@ -66,4 +57,12 @@ func TestDeleteThreadHierLinks(t *testing.T) {
 		return
 	}
 }
-*/
+
+func TestStkCostInDiffIters(t *testing.T) {
+	cn, stks, ths := setupTest("big tree")
+	cn.ThreadSetIter(ths["AB"].ID, "2020-09 Sep")
+	res := cn.ThreadrowsByStkIter(stks["a"].Email, "2020-10 Oct")
+	if x, g := 10, res[0].Cost; x != g {
+		t.Fatalf("Expected A to have cost %v; got %v", x, g)
+	}
+}
