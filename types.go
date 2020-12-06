@@ -11,12 +11,8 @@ import (
 // TapController provides fucntions for reading and changing application state
 type TapController interface {
 
-	// domain
-
 	// ClearDomain deletes all information within `domain` from the database
 	DomainClear(domain string)
-
-	// stk
 
 	// GetStk gets the information for the stakeholder with the given `email`
 	Stk(email string) (taps.Stakeholder, error)
@@ -30,8 +26,6 @@ type TapController interface {
 	// GetStksForDomain returns a hierarchical view of all stakeholder in `domain`
 	StksByDomain(domain string) []taps.StkInHier
 
-	// iters
-
 	// GetItersForStk returns all iterations relevant to the given stakeholder `stk`, including those with a thread that
 	// `stk` is a stakeholder for, plus Inbox, the current iteration, the next one, and Backlog
 	ItersByStk(stk string) []string
@@ -40,8 +34,6 @@ type TapController interface {
 	// that's a child of `parent`, plus Inbox, the current iteration, the next one, and Backlog. They will be in the
 	// cadence of `parent`'s owner
 	ItersByParent(parent int64) []string
-
-	// thread
 
 	// Thread returns the info for the given thread
 	Thread(id int64) (th taps.Thread, err error)
@@ -60,7 +52,13 @@ type TapController interface {
 	// ThreadUnlink makes `parent` no longer a parent of `child`, if it was.
 	ThreadUnlink(parent, child int64)
 
-	// threadrows
+	// ThreadMoveForStk moves `thread` within its iteration as seen by stakeholder `stk`. Based on `moveTo`, it will be
+	// moved to the start or end of the iteration, or right before `reference`
+	ThreadMoveForStk(thread, reference int64, stkE string, moveTo MoveTo)
+
+	// ThreadMoveForParent moves `thread` within its iteration as seen by parent `parent`. Based on `moveTo`, it will be
+	// moved to the start or end of the iteration, or right before `reference`
+	ThreadMoveForParent(thread, reference, parent int64, moveTo MoveTo)
 
 	// ThreadrowsByStkIter returns all threadrows in hierarchical format for the given stakeholder `stk` and iteration
 	// `iter`
@@ -73,20 +71,8 @@ type TapController interface {
 	// ThreadrowsByChild returns all threadrows (in a flat list) that are parents of the given `child`
 	ThreadrowsByChild(child int64) []taps.Threadrow
 
-	// ThreadMoveForStk moves `thread` within its iteration as seen by stakeholder `stk`. Based on `moveTo`, it will be
-	// moved to the start or end of the iteration, or right before `reference`
-	ThreadMoveForStk(thread, reference int64, stkE string, moveTo MoveTo)
-
-	// ThreadMoveForParent moves `thread` within its iteration as seen by parent `parent`. Based on `moveTo`, it will be
-	// moved to the start or end of the iteration, or right before `reference`
-	ThreadMoveForParent(thread, reference, parent int64, moveTo MoveTo)
-
-	/*
-		// threadsset.go
-
-		// SetThreadIter moves `thread` and all descendants in the same iteration to iteration `iter`
-		SetThreadIter(thread int64, iter string) (err error)
-	*/
+	// SetThreadIter moves `thread` and all descendants in the same iteration to iteration `iter`
+	ThreadSetIter(thread int64, iter string)
 }
 
 // ErrNotFound indicates that no matching record was found when querying

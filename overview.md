@@ -1,6 +1,6 @@
 # Architectural overview
 
-## Pseudocode to describe high-level logic
+## Pseudocode to describe high-level logic for selected functions
 
 **NewThread**(name, owner, iteration, cost, parents, children):
     thread = db.NewThread(name, owner, iteration, cost)
