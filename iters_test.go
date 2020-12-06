@@ -4,7 +4,7 @@ import "testing"
 
 func TestGetItersForStk(t *testing.T) {
 	cn, stks, _ := setupTest("s team")
-	iters := cn.ItersForStk(stks["aa"].Email)
+	iters := cn.ItersByStk(stks["aa"].Email)
 	expected := []string{"Inbox", "2020-10 Oct", "2020-11 Nov", "2020-12 Dec", "Backlog"}
 	if len(iters) != len(expected) {
 		t.Errorf("Expected length %v; got %v", len(expected), len(iters))
@@ -19,7 +19,7 @@ func TestGetItersForStk(t *testing.T) {
 
 func TestGetItersForParent(t *testing.T) {
 	cn, _, ths := setupTest("s team")
-	iters := cn.ItersForParent(ths["A"].ID)
+	iters := cn.ItersByParent(ths["A"].ID)
 	expected := []string{"Inbox", "2020 Q4", "2021 Q1", "Backlog"}
 	if len(iters) != len(expected) {
 		t.Errorf("Expected length %v; got %v", len(expected), len(iters))

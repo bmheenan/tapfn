@@ -34,12 +34,12 @@ type TapController interface {
 
 	// GetItersForStk returns all iterations relevant to the given stakeholder `stk`, including those with a thread that
 	// `stk` is a stakeholder for, plus Inbox, the current iteration, the next one, and Backlog
-	ItersForStk(stk string) []string
+	ItersByStk(stk string) []string
 
 	// GetItersForStk returns all iterations relevant to the given thread `parent`, including those with a thread
 	// that's a child of `parent`, plus Inbox, the current iteration, the next one, and Backlog. They will be in the
 	// cadence of `parent`'s owner
-	ItersForParent(parent int64) []string
+	ItersByParent(parent int64) []string
 
 	// thread
 
@@ -54,40 +54,26 @@ type TapController interface {
 	// ThreadAddStk makes `stk` a stakholder of `thread`, if not already
 	ThreadAddStk(id int64, stk string)
 
+	// ThreadLink makes `parent` a parent of `child`. It returns an ErrNotFound if either does not exist.
+	ThreadLink(parent, child int64) error
+
+	// ThreadUnlink makes `parent` no longer a parent of `child`, if it was.
+	ThreadUnlink(parent, child int64)
+
+	// threadrows
+
+	// ThreadrowsByStkIter returns all threadrows in hierarchical format for the given stakeholder `stk` and iteration
+	// `iter`
+	ThreadrowsByStkIter(stk, iter string) []taps.Threadrow
+
+	// ThreadrowsByParentIter returns all threadrows in hierarchical format for the given parent `parent` and iteration
+	// `iter`
+	ThreadrowsByParentIter(parent int64, iter string) []taps.Threadrow
+
+	// ThreadrowsByChild returns all threadrows (in a flat list) that are parents of the given `child`
+	ThreadrowsByChild(child int64) []taps.Threadrow
+
 	/*
-		// threadsdelete.go
-
-		// DeleteThreadHierLinks removes all links from `child` to each of its parents that link it up to ancestor `anc`
-		DeleteThreadHierLinks(anc, child int64) error
-
-		// threadsget.go
-
-		// GetThread returns the info for the given thread
-		GetThread(id int64) (th taps.Thread, err error)
-
-		// GetThreadrowsByStkIter gets all threads where `stk` is a stakeholder in iteration `iter`. They're returned as
-		// threadrows scoped to `stk`, so they use `stk`'s ordering and only show costs for the pieces that `stk` owns
-		// (including team members)
-		GetThreadrowsByStkIter(stk, iter string) (ths []taps.Threadrow, err error)
-
-		// GetThreadrowsByParentIter gets all threads that are children of `parent`, and recursively gets their children
-		// until all descendants are fetched. They're returned as threadrows scoped to `parent`, so they use `parent`'s
-		// order, and display their total cost
-		GetThreadrowsByParentIter(parent int64, iter string) (ths []taps.Threadrow, err error)
-
-		// GetThreadrowsByChild gets all threads that are direct parents of the given `child` thread
-		GetThreadrowsByChild(child int64) (ths []taps.Threadrow, err error)
-
-		// threadsnew.go
-
-		// NewThread creates a new thread with the given information. `name` is the name of the thread. `owner` is the email
-		// of an existing stakeholder. `iter` is its iteration. `cost` is the direct cost of the thread. `parents` and
-		// `children` nest this thread under existing ones, or next existing threads under this one
-		NewThread(name, owner, iter string, cost int, parents, children []int64) (int64, error)
-
-		// NewThreadHierLink links a `parent` thread with a `child` in the hierarchy. You cannot create a loop
-		NewThreadHierLink(parent, child int64) error
-
 		// threadsmove.go
 
 		// MoveThreadParent moves the thread with id `thread` in the context of the thread with id `parent`. `parent` must be a
@@ -111,6 +97,9 @@ type TapController interface {
 
 // ErrNotFound indicates that no matching record was found when querying
 var ErrNotFound = errors.New("Not found")
+
+// ErrWouldMakeLoop indicates that the items cannot be linked because loops are not allowed
+var ErrWouldMakeLoop = errors.New("Cannot make a loop")
 
 type cnTapdb struct {
 	db           tapdb.DBInterface

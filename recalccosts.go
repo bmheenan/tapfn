@@ -26,3 +26,12 @@ func (cn *cnTapdb) recalcStkCost(id int64, stk string) {
 		panic(fmt.Sprintf("Could not set new cost for %d and %v: %v", id, stk, err))
 	}
 }
+
+func (cn *cnTapdb) recalcCostTot(id int64) {
+	ds := cn.db.GetThreadDes(id)
+	rnCost := 0
+	for _, d := range ds {
+		rnCost += d.CostDir
+	}
+	cn.db.SetCostTot(id, rnCost)
+}

@@ -13,7 +13,12 @@
 **LinkThreads**(parent, child):
     if **wouldMakeLoop**(parent, child):
         error
-    **linkThreadsBase**(parent, child)
+    iter = **iterResulting**(parent.Owner.Cadence, child.Iter)
+    ord = db.GetOrderBeforeForParent(parent, iter, MAX)
+    db.LinkThreads(parent, child, iter, ord)
+    for ancestor in db.GetAncestors(parent):
+        **recalcTotalCost**(ancestor)
+    **balanceParent**(parent, iter)
     **recalcAllStakeholderCosts**(parent)
 
 **UnlinkThreads**(parent, child):
@@ -66,21 +71,6 @@
     **AddStakeholderToThread(thread, owner)
     db.SetThreadOwner(thread, owner)
     **recalcAllStakeholderCosts**(thread)
-
-**linkThreadsBase**(parent, child):
-    iter = **iterResulting**(parent.Owner.Cadence, child.Iter)
-    ord = db.GetOrderBeforeForParent(parent, iter, MAX)
-    db.LinkThreads(parent, child, iter, ord)
-    for ancestor in db.GetAncestors(parent):
-        **recalcTotalCost**(ancestor)
-    **balanceParent**(parent, iter)
-
-**unlinkThreadsIfObsolete**(parent, child, stakeholder):
-    if NOT (stakeholder exists in parent.Stakeholders)
-        or NOT (stakeholder exists in child.Stakeholders)
-        or NOT (parent.Stakeholders[stakeholder].Iter = child.Stakeholders[stakeholder].Iter)
-        or NOT (parent exists in child.Parents):
-        db.UnlinkThreadsForStakeholder(parent, child, stakeholder)
 
 **wouldMakeLoop**(parent, child) bool:
     ancestors = db.GetAncestors(parent)

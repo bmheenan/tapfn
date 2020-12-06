@@ -186,6 +186,20 @@ var stkCs = map[string](map[string]*stkInfo){
 			Parents: []string{"b"},
 		},
 	},
+	"big tree": {
+		"a": &stkInfo{
+			Email:   "a@example.com",
+			Name:    "Person a",
+			Abbrev:  "a",
+			Cadence: taps.Monthly,
+		},
+		"b": &stkInfo{
+			Email:   "b@example.com",
+			Name:    "Person b",
+			Abbrev:  "aa",
+			Cadence: taps.Monthly,
+		},
+	},
 }
 
 var thCs = map[string](map[string]*thInfo){
@@ -276,6 +290,54 @@ var thCs = map[string](map[string]*thInfo){
 			Iter:  "2020-12 Dec",
 			Cost:  10,
 			Owner: stkCs["s team"]["aa"].Email,
+		},
+	},
+	"big tree": {
+		"A": &thInfo{
+			Name:  "A",
+			Iter:  "2020-10 Oct",
+			Cost:  0,
+			Owner: stkCs["s team"]["a"].Email,
+		},
+		"AA": &thInfo{
+			Name:    "AA",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["b"].Email,
+			Parents: []string{"A"},
+		},
+		"AAA": &thInfo{
+			Name:    "AAA",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["a"].Email,
+			Parents: []string{"AA"},
+		},
+		"AB": &thInfo{
+			Name:    "AB",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["a"].Email,
+			Parents: []string{"A"},
+		},
+		"AC": &thInfo{
+			Name:    "AC",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["b"].Email,
+			Parents: []string{"A"},
+		},
+		"B": &thInfo{
+			Name:  "B",
+			Iter:  "2020-10 Oct",
+			Cost:  10,
+			Owner: stkCs["s team"]["a"].Email,
+		},
+		"C": &thInfo{
+			Name:  "C",
+			Iter:  "2020-10 Oct",
+			Cost:  10,
+			Owner: stkCs["s team"]["b"].Email,
 		},
 	},
 }

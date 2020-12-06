@@ -19,13 +19,11 @@ func (cn *cnTapdb) ThreadNew(name, owner, iter string, cost int, parents, childr
 	id = cn.db.NewThread(name, oParts[1], owner, iter, string(taps.NotStarted), 1, cost)
 	cn.ThreadAddStk(id, owner)
 	// TODO set percentile
-	for range parents {
-		//cn.ThreadLink(p, id)
-		panic("parents not implemented")
+	for _, p := range parents {
+		cn.ThreadLink(p, id)
 	}
-	for range children {
-		//cn.ThreadLink(id, c)
-		panic("children not implemented")
+	for _, c := range children {
+		cn.ThreadLink(id, c)
 	}
 	return id, nil
 }

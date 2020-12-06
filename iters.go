@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func (cn *cnTapdb) ItersForStk(stkE string) []string {
+func (cn *cnTapdb) ItersByStk(stkE string) []string {
 	is, err := cn.db.GetItersForStk(stkE)
 	if err != nil {
 		panic(fmt.Sprintf("Could not get iterations for %v: %v", stkE, err))
@@ -20,7 +20,7 @@ func (cn *cnTapdb) ItersForStk(stkE string) []string {
 	return iters
 }
 
-func (cn *cnTapdb) ItersForParent(parent int64) []string {
+func (cn *cnTapdb) ItersByParent(parent int64) []string {
 	is, err := cn.db.GetItersForParent(parent)
 	if err != nil {
 		panic(fmt.Sprintf("Could not get iterations for %v: %v", parent, err))
