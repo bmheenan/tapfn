@@ -3,32 +3,20 @@ package tapfn
 import (
 	"fmt"
 	"sort"
-	"testing"
 	"time"
 
 	"github.com/bmheenan/taps"
 )
 
-func setupTest(config string) (
-	cn TapController,
-	stks map[string]*stkInfo,
-	ths map[string]*thInfo,
-	err error,
-) {
+func setupTest(config string) (cn TapController, stks map[string]*stkInfo, ths map[string]*thInfo) {
 	dom := "example.com"
 	stks = stkCs[config]
 	ths = thCs[config]
-	var errCn error
-	cn, errCn = Init(getTestCredentials())
-	if errCn != nil {
-		err = fmt.Errorf("Could not get TapController: %v", errCn)
-		return
+	cn, err := Init(getTestCredentials())
+	if err != nil {
+		panic(fmt.Sprintf("Could not get TapController: %v", err))
 	}
-	errClr := cn.ClearDomain(dom)
-	if errClr != nil {
-		err = fmt.Errorf("Could not clear domain: %v", errClr)
-		return
-	}
+	cn.DomainClear(dom)
 	stkNs := []string{}
 	for n := range stks {
 		stkNs = append(stkNs, n)
@@ -39,7 +27,7 @@ func setupTest(config string) (
 		for _, p := range stks[n].Parents {
 			ps = append(ps, stks[p].Email)
 		}
-		errStk := cn.NewStk(
+		errStk := cn.StkNew(
 			stks[n].Email,
 			stks[n].Name,
 			stks[n].Abbrev,
@@ -63,7 +51,7 @@ func setupTest(config string) (
 		for _, p := range ths[n].Parents {
 			ps = append(ps, ths[p].ID)
 		}
-		id, errTh := cn.NewThread(ths[n].Name, ths[n].Owner, ths[n].Iter, ths[n].Cost, ps, nil)
+		id, errTh := cn.ThreadNew(ths[n].Name, ths[n].Owner, ths[n].Iter, ths[n].Cost, ps, nil)
 		if errTh != nil {
 			err = fmt.Errorf("Could not create thread %v: %v", ths[n].Name, errTh)
 			return
@@ -74,29 +62,6 @@ func setupTest(config string) (
 		db.timeOverride = time.Date(2020, 10, 1, 0, 0, 0, 0, time.UTC)
 	}
 	return
-}
-
-func expect(label string, expected, got interface{}, t *testing.T) {
-	switch x := expected.(type) {
-	case int:
-		if g, ok := got.(int); ok {
-			if x != g {
-				t.Fatalf("Expected %s %d; got %d", label, x, g)
-			}
-		} else {
-			t.Fatalf("Could not compare %T and %T", expected, got)
-		}
-	case string:
-		if g, ok := got.(string); ok {
-			if x != g {
-				t.Fatalf("Expected %s %s; got %s", label, x, g)
-			}
-		} else {
-			t.Fatalf("Could not compare %T and %T", expected, got)
-		}
-	default:
-		t.Fatalf("Could not comprare %T and %T", expected, got)
-	}
 }
 
 type stkInfo struct {
@@ -118,6 +83,7 @@ type thInfo struct {
 }
 
 var stkCs = map[string](map[string]*stkInfo){
+	"blank": {},
 	"1 stk": {
 		"a": &stkInfo{
 			Email:   "a@example.com",
@@ -140,6 +106,49 @@ var stkCs = map[string](map[string]*stkInfo){
 			Name:    "Person a",
 			Abbrev:  "a",
 			Cadence: taps.Monthly,
+		},
+	},
+	"1 stk w ths in diff iters": {
+		"a": &stkInfo{
+			Email:   "a@example.com",
+			Name:    "Person a",
+			Abbrev:  "a",
+			Cadence: taps.Monthly,
+		},
+	},
+	"s team no ths": {
+		"a": &stkInfo{
+			Email:   "a@example.com",
+			Name:    "Team a",
+			Abbrev:  "a",
+			Cadence: taps.Quarterly,
+		},
+		"aa": &stkInfo{
+			Email:   "aa@example.com",
+			Name:    "Person aa",
+			Abbrev:  "aa",
+			Cadence: taps.Monthly,
+			Parents: []string{"a"},
+		},
+		"ab": &stkInfo{
+			Email:   "ab@example.com",
+			Name:    "Person ab",
+			Abbrev:  "ab",
+			Cadence: taps.Monthly,
+			Parents: []string{"a"},
+		},
+		"b": &stkInfo{
+			Email:   "b@example.com",
+			Name:    "Team b",
+			Abbrev:  "b",
+			Cadence: taps.Quarterly,
+		},
+		"ba": &stkInfo{
+			Email:   "ba@example.com",
+			Name:    "Person ba",
+			Abbrev:  "ba",
+			Cadence: taps.Monthly,
+			Parents: []string{"b"},
 		},
 	},
 	"s team": {
@@ -177,10 +186,26 @@ var stkCs = map[string](map[string]*stkInfo){
 			Parents: []string{"b"},
 		},
 	},
+	"big tree": {
+		"a": &stkInfo{
+			Email:   "a@example.com",
+			Name:    "Person a",
+			Abbrev:  "a",
+			Cadence: taps.Monthly,
+		},
+		"b": &stkInfo{
+			Email:   "b@example.com",
+			Name:    "Person b",
+			Abbrev:  "aa",
+			Cadence: taps.Monthly,
+		},
+	},
 }
 
 var thCs = map[string](map[string]*thInfo){
-	"1 stk": {},
+	"blank":         {},
+	"1 stk":         {},
+	"s team no ths": {},
 	"1 th": {
 		"A": &thInfo{
 			Name:  "A",
@@ -218,6 +243,20 @@ var thCs = map[string](map[string]*thInfo){
 			Parents: []string{"A"},
 		},
 	},
+	"1 stk w ths in diff iters": {
+		"A": &thInfo{
+			Name:  "A",
+			Iter:  "2020-10 Oct",
+			Cost:  1,
+			Owner: stkCs["1 stk w ths in diff iters"]["a"].Email,
+		},
+		"B": &thInfo{
+			Name:  "B",
+			Iter:  "2020-11 Nov",
+			Cost:  1,
+			Owner: stkCs["1 stk w ths in diff iters"]["a"].Email,
+		},
+	},
 	"s team": {
 		"A": &thInfo{
 			Name:  "A",
@@ -251,6 +290,54 @@ var thCs = map[string](map[string]*thInfo){
 			Iter:  "2020-12 Dec",
 			Cost:  10,
 			Owner: stkCs["s team"]["aa"].Email,
+		},
+	},
+	"big tree": {
+		"A": &thInfo{
+			Name:  "A",
+			Iter:  "2020-10 Oct",
+			Cost:  0,
+			Owner: stkCs["s team"]["a"].Email,
+		},
+		"AA": &thInfo{
+			Name:    "AA",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["b"].Email,
+			Parents: []string{"A"},
+		},
+		"AAA": &thInfo{
+			Name:    "AAA",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["a"].Email,
+			Parents: []string{"AA"},
+		},
+		"AB": &thInfo{
+			Name:    "AB",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["a"].Email,
+			Parents: []string{"A"},
+		},
+		"AC": &thInfo{
+			Name:    "AC",
+			Iter:    "2020-10 Oct",
+			Cost:    5,
+			Owner:   stkCs["s team"]["b"].Email,
+			Parents: []string{"A"},
+		},
+		"B": &thInfo{
+			Name:  "B",
+			Iter:  "2020-10 Oct",
+			Cost:  10,
+			Owner: stkCs["s team"]["a"].Email,
+		},
+		"C": &thInfo{
+			Name:  "C",
+			Iter:  "2020-10 Oct",
+			Cost:  10,
+			Owner: stkCs["s team"]["b"].Email,
 		},
 	},
 }
