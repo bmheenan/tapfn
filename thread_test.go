@@ -66,3 +66,42 @@ func TestStkCostInDiffIters(t *testing.T) {
 		t.Fatalf("Expected A to have cost %v; got %v", x, g)
 	}
 }
+
+func TestSetThreadName(t *testing.T) {
+	cn, _, ths := setupTest("1 th")
+	cn.ThreadSetName(ths["A"].ID, "New name")
+	th, err := cn.Thread(ths["A"].ID)
+	if err != nil {
+		t.Fatalf("Could not get thread: %v", err)
+	}
+	if x, g := "New name", th.Name; x != g {
+		t.Fatalf("Expected name %v; got %v", x, g)
+	}
+}
+
+func TestSetThreadDesc(t *testing.T) {
+	cn, _, ths := setupTest("1 th")
+	cn.ThreadSetDesc(ths["A"].ID, "This is a description")
+	th, err := cn.Thread(ths["A"].ID)
+	if err != nil {
+		t.Fatalf("Could not get thread: %v", err)
+	}
+	if x, g := "This is a description", th.Desc; x != g {
+		t.Fatalf("Expected name %v; got %v", x, g)
+	}
+}
+
+func TestSetThreadCost(t *testing.T) {
+	cn, _, ths := setupTest("big tree")
+	cn.ThreadSetCost(ths["AAA"].ID, 20)
+	th, err := cn.Thread(ths["A"].ID)
+	if err != nil {
+		t.Fatalf("Could not get thread: %v", err)
+	}
+	if x, g := 35, th.CostTot; x != g {
+		t.Fatalf("Expected total cost %v; got %v", x, g)
+	}
+	if x, g := 25, th.Stks["a@example.com"].Cost; x != g {
+		t.Fatalf("Expected total cost %v; got %v", x, g)
+	}
+}

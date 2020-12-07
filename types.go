@@ -73,6 +73,15 @@ type TapController interface {
 
 	// SetThreadIter moves `thread` and all descendants in the same iteration to iteration `iter`
 	ThreadSetIter(thread int64, iter string)
+
+	// ThreadSetName sets the name of `thread` to `name`
+	ThreadSetName(thread int64, name string)
+
+	// ThreadSetDesc sets the description of `thread` to `desc`
+	ThreadSetDesc(thread int64, desc string)
+
+	// ThreadSetCost sets the direct cost of `thread` to `cost`, and recalculates total ancestor and stakeholder costs
+	ThreadSetCost(thread int64, cost int)
 }
 
 // ErrNotFound indicates that no matching record was found when querying
