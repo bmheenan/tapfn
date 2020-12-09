@@ -88,6 +88,8 @@ github.com/bmheenan/taps v0.0.0-20201130221454-bce86514d19d h1:xCe99bd3EMubQZv20
 github.com/bmheenan/taps v0.0.0-20201130221454-bce86514d19d/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/taps v0.0.0-20201209131338-773bf4c50801 h1:4NY+7yncb9BBlj3BT7N4Ki7eRfymUULmx0U4J7rdcgQ=
 github.com/bmheenan/taps v0.0.0-20201209131338-773bf4c50801/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
+github.com/bmheenan/taps v0.0.0-20201209171904-1563861530fd h1:lE2uFCl2zcByG5myGVtz+rL/bDNfPXGPmVNsObX5ZxM=
+github.com/bmheenan/taps v0.0.0-20201209171904-1563861530fd/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/tapstruct v0.0.0-20201017014047-020486e422ca h1:De8FpNdwq4DiDzLymlI+9lltj5kXezJ1B0JAzhpV8LI=
 github.com/bmheenan/tapstruct v0.0.0-20201017014047-020486e422ca/go.mod h1:MemFiXUUxznBu9YkVZnX2Wl7nSMAgMqgjBBKEobcTHY=
 github.com/go-sql-driver/mysql v1.5.0 h1:ozyZYNQW3x3HtqT1jira07DN2PArx2v7/mN66gGcHOs=

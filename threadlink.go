@@ -28,9 +28,7 @@ func (cn *cnTapdb) ThreadLink(parent, child int64) error {
 	ordLow := cn.db.GetOrdBeforeForParent(parent, iter, math.MaxInt32)
 	ord := ((math.MaxInt32 - ordLow) / 2) + ordLow
 	cn.db.NewThreadHierLink(parent, child, iter, ord, p.Owner.Domain)
-	for a := range cn.db.GetThreadAns(parent) {
-		cn.recalcCostTot(a)
-	}
+	cn.recalcAllCostTot(parent)
 	cn.balanceParent(parent, iter)
 	cn.recalcAllStkCosts(parent)
 	return nil
@@ -38,9 +36,7 @@ func (cn *cnTapdb) ThreadLink(parent, child int64) error {
 
 func (cn *cnTapdb) ThreadUnlink(parent, child int64) {
 	cn.db.DeleteThreadHierLink(parent, child)
-	for a := range cn.db.GetThreadAns(parent) {
-		cn.recalcCostTot(a)
-	}
+	cn.recalcAllCostTot(parent)
 	cn.recalcAllStkCosts(parent)
 }
 

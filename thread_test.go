@@ -1,6 +1,10 @@
 package tapfn
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/bmheenan/taps"
+)
 
 func TestNewAndGetThread(t *testing.T) {
 	cn, stks, _ := setupTest("1 stk")
@@ -102,6 +106,21 @@ func TestSetThreadCost(t *testing.T) {
 		t.Fatalf("Expected total cost %v; got %v", x, g)
 	}
 	if x, g := 25, th.Stks["a@example.com"].Cost; x != g {
+		t.Fatalf("Expected total cost %v; got %v", x, g)
+	}
+}
+
+func TestThreadCostOnDone(t *testing.T) {
+	cn, _, ths := setupTest("big tree")
+	cn.ThreadSetState(ths["AAA"].ID, taps.Done)
+	th, err := cn.Thread(ths["A"].ID)
+	if err != nil {
+		t.Fatalf("Could not get thread: %v", err)
+	}
+	if x, g := 15, th.CostTot; x != g {
+		t.Fatalf("Expected total cost %v; got %v", x, g)
+	}
+	if x, g := 5, th.Stks["a@example.com"].Cost; x != g {
 		t.Fatalf("Expected total cost %v; got %v", x, g)
 	}
 }
