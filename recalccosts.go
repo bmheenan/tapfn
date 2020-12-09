@@ -26,8 +26,9 @@ func (cn *cnTapdb) recalcStkCost(id int64, stk string) {
 	sum := 0
 	for _, dec := range cn.db.GetThreadDes(id) {
 		if _, ok := mbrs[dec.Owner.Email]; ok {
-			iter := iterResulting(dec.Iter, s.Cadence)
-			if iter == th.Iter {
+			iterDec := iterResulting(dec.Iter, s.Cadence)
+			iterTh := iterResulting(th.Iter, s.Cadence)
+			if iterTh == iterDec {
 				sum += dec.CostDir
 			}
 		}

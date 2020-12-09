@@ -43,8 +43,11 @@ type TapController interface {
 	// `children` nest this thread under existing ones, or next existing threads under this one
 	ThreadNew(name, owner, iter string, cost int, parents, children []int64) (id int64, err error)
 
-	// ThreadAddStk makes `stk` a stakholder of `thread`, if not already
+	// ThreadAddStk makes `stk` a stakeholder of `thread`, if not already
 	ThreadAddStk(id int64, stk string)
+
+	// ThreadRemoveStk makes `stk` no longer a stakeholder of `thread`, if it was
+	ThreadRemoveStk(thread int64, stk string)
 
 	// ThreadLink makes `parent` a parent of `child`. It returns an ErrNotFound if either does not exist.
 	ThreadLink(parent, child int64) error
@@ -82,6 +85,9 @@ type TapController interface {
 
 	// ThreadSetCost sets the direct cost of `thread` to `cost`, and recalculates total ancestor and stakeholder costs
 	ThreadSetCost(thread int64, cost int)
+
+	// ThreadSetState sets `thread` to `state`
+	ThreadSetState(thread int64, state taps.State)
 }
 
 // ErrNotFound indicates that no matching record was found when querying
