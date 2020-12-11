@@ -11,23 +11,42 @@ import (
 	"github.com/bmheenan/taps"
 )
 
-func (cn *cnTapdb) iterCurrent(cadence taps.Cadence) (iter string, err error) {
+func (cn *cnTapdb) iterCurrent(cadence taps.Cadence) string {
 	var d time.Time
 	if cn.timeOverride == (time.Time{}) {
 		d = time.Now()
 	} else {
 		d = cn.timeOverride
 	}
-	iter = iterContaining(d, cadence)
-	return
+	return iterContaining(d, cadence)
+}
+
+func (cn *cnTapdb) itersBetweenCurrentAnd(end string) []string {
+	cadence, valid := iterCadence(end)
+	if !valid {
+		panic(fmt.Sprintf("Could not get cadence of %v: invalid iteration", end))
+	}
+	now := cn.iterCurrent(cadence)
+	var min, max string
+	switch {
+	case now == end:
+		return []string{now}
+	case now < end:
+		max = end
+		min = now
+	case now > end:
+		max = now
+		min = end
+	}
+	iters := []string{min}
+	for iters[len(iters)-1] != max {
+		iters = append(iters, iterNext(iters[len(iters)-1]))
+	}
+	return iters
 }
 
 func (cn *cnTapdb) itersAddStd(in []string, cadence taps.Cadence) (out []string, err error) {
-	current, errCur := cn.iterCurrent(cadence)
-	if errCur != nil {
-		err = fmt.Errorf("Could not get current iteration: %v", errCur)
-		return
-	}
+	current := cn.iterCurrent(cadence)
 	if !strIn(current, in) {
 		in = append(in, current)
 	}

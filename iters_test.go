@@ -31,3 +31,31 @@ func TestGetItersForParent(t *testing.T) {
 		}
 	}
 }
+
+func TestIterOptionsFuture(t *testing.T) {
+	cn, _, ths := setupTest("2 stks w 1 th")
+	iters := cn.IterOptions(ths["A"].ID)
+	if x, g := 6, len(iters); x != g {
+		t.Fatalf("Expected %v iterations; got %v", x, g)
+	}
+	if x, g := "2020-10 Oct", iters[1]; x != g {
+		t.Fatalf("Expected 1st iter to be %v; got %v", x, g)
+	}
+	if x, g := "2021-01 Jan", iters[4]; x != g {
+		t.Fatalf("Expected 1st iter to be %v; got %v", x, g)
+	}
+}
+
+func TestIterOptionsPast(t *testing.T) {
+	cn, _, ths := setupTest("th in past")
+	iters := cn.IterOptions(ths["A"].ID)
+	if x, g := 6, len(iters); x != g {
+		t.Fatalf("Expected %v iterations; got %v", x, g)
+	}
+	if x, g := "2020-08 Aug", iters[1]; x != g {
+		t.Fatalf("Expected 1st iter to be %v; got %v", x, g)
+	}
+	if x, g := "2020-11 Nov", iters[4]; x != g {
+		t.Fatalf("Expected 1st iter to be %v; got %v", x, g)
+	}
+}

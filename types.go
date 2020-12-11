@@ -35,6 +35,9 @@ type TapController interface {
 	// cadence of `parent`'s owner
 	ItersByParent(parent int64) []string
 
+	// IterOptions returns which options the user should be given when they want to change the iteration of `thread`
+	IterOptions(thread int64) []string
+
 	// Thread returns the info for the given thread
 	Thread(id int64) (th taps.Thread, err error)
 
