@@ -20,7 +20,7 @@ func TestGetItersForStk(t *testing.T) {
 func TestGetItersForParent(t *testing.T) {
 	cn, _, ths := setupTest("s team")
 	iters := cn.ItersByParent(ths["A"].ID)
-	expected := []string{"Inbox", "2020 Q4", "2021 Q1", "Backlog"}
+	expected := []string{"2020 Q4"}
 	if len(iters) != len(expected) {
 		t.Errorf("Expected length %v; got %v", len(expected), len(iters))
 		return

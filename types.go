@@ -88,6 +88,9 @@ type TapController interface {
 
 	// ThreadSetState sets `thread` to `state`
 	ThreadSetState(thread int64, state taps.State)
+
+	// ThreadSetOwner sets `thread` to have owner `owner`
+	ThreadSetOwner(thread int64, owner string)
 }
 
 // ErrNotFound indicates that no matching record was found when querying

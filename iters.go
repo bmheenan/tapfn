@@ -29,9 +29,8 @@ func (cn *cnTapdb) ItersByParent(parent int64) []string {
 	if errP != nil {
 		panic(fmt.Sprintf("Could not get parent %v: %v", parent, err))
 	}
-	iters, err := cn.itersAddStd(is, p.Owner.Cadence)
-	if err != nil {
-		panic(fmt.Sprintf("Could not add standard iterations: %v", err))
+	if !strIn(p.Iter, is) {
+		is = append(is, p.Iter)
 	}
-	return iters
+	return is
 }
