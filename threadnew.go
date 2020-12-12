@@ -25,5 +25,6 @@ func (cn *cnTapdb) ThreadNew(name, owner, iter string, cost int, parents, childr
 	for _, c := range children {
 		cn.ThreadLink(id, c)
 	}
+	cn.recalcPri(owner, iter)
 	return id, nil
 }

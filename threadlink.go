@@ -31,6 +31,7 @@ func (cn *cnTapdb) ThreadLink(parent, child int64) error {
 	cn.recalcAllCostTot(parent)
 	cn.balanceParent(parent, iter)
 	cn.recalcAllStkCosts(parent)
+	cn.recalcPri(p.Owner.Email, p.Stks[p.Owner.Email].Iter)
 	return nil
 }
 
@@ -38,6 +39,11 @@ func (cn *cnTapdb) ThreadUnlink(parent, child int64) {
 	cn.db.DeleteThreadHierLink(parent, child)
 	cn.recalcAllCostTot(parent)
 	cn.recalcAllStkCosts(parent)
+	p, err := cn.Thread(parent)
+	if err != nil {
+		panic(fmt.Sprintf("Could not get parent: %v", err))
+	}
+	cn.recalcPri(p.Owner.Email, p.Stks[p.Owner.Email].Iter)
 }
 
 func (cn *cnTapdb) wouldMakeLoop(parent, child int64) bool {

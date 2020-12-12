@@ -1,8 +1,13 @@
 package tapfn
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 func (cn *cnTapdb) ThreadSetIter(thread int64, iter string) {
+	stkItersToUpdate := map[string]bool{}
+	threadsToUpdate := map[int64]bool{}
 	th, err := cn.db.GetThread(thread)
 	if err != nil {
 		panic(fmt.Sprintf("Could not get thread: %v", err))
@@ -12,6 +17,8 @@ func (cn *cnTapdb) ThreadSetIter(thread int64, iter string) {
 			break
 		}
 		iter := iterResulting(iter, dec.Owner.Cadence)
+		stkItersToUpdate[dec.Owner.Email+":"+dec.Iter] = true
+		stkItersToUpdate[dec.Owner.Email+":"+iter] = true
 		cn.db.SetIter(dec.ID, iter)
 		for parent := range dec.Parents {
 			pa, err := cn.db.GetThread(parent)
@@ -49,6 +56,13 @@ func (cn *cnTapdb) ThreadSetIter(thread int64, iter string) {
 			cn.db.SetIterForStk(dec.ID, stk, iter)
 			cn.ThreadMoveForStk(dec.ID, 0, stk, place)
 		}
-		cn.recalcAllStkCosts(dec.ID)
+		threadsToUpdate[dec.ID] = true
+	}
+	for stkIter := range stkItersToUpdate {
+		si := strings.Split(stkIter, ":")
+		cn.recalcPri(si[0], si[1])
+	}
+	for th := range threadsToUpdate {
+		cn.recalcAllStkCosts(th)
 	}
 }

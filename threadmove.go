@@ -47,6 +47,9 @@ func (cn *cnTapdb) ThreadMoveForStk(thread, reference int64, stkE string, moveTo
 	if err != nil {
 		panic(fmt.Sprintf("Could not set new order for thread: %v", err))
 	}
+	if t.Owner.Email == stkE {
+		cn.recalcPri(stkE, t.Stks[stkE].Iter)
+	}
 }
 
 func (cn *cnTapdb) ThreadMoveForParent(thread, reference, parent int64, moveTo MoveTo) {

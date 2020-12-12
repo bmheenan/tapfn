@@ -78,6 +78,8 @@ github.com/bmheenan/tapdb v0.0.0-20201211005614-e517b6a8157a h1:PB+aEOMEV+AA3l3C
 github.com/bmheenan/tapdb v0.0.0-20201211005614-e517b6a8157a/go.mod h1:NlPMaEPO6a25xFa6nHivkvMaXapPlwnrlzY2EgIzXrU=
 github.com/bmheenan/tapdb v0.0.0-20201211170933-931b6c838d78 h1:4BS0eGI4+UhdGhkrCayfRpFB60svWGNmdahbU+6U2Hs=
 github.com/bmheenan/tapdb v0.0.0-20201211170933-931b6c838d78/go.mod h1:NlPMaEPO6a25xFa6nHivkvMaXapPlwnrlzY2EgIzXrU=
+github.com/bmheenan/tapdb v0.0.0-20201212005015-ba862c0ba83d h1:OHyGmEdbReU1xXkNp6iSD66rEQzwHO30/uizuGOOzzU=
+github.com/bmheenan/tapdb v0.0.0-20201212005015-ba862c0ba83d/go.mod h1:NlPMaEPO6a25xFa6nHivkvMaXapPlwnrlzY2EgIzXrU=
 github.com/bmheenan/taps v0.0.0-20201031141326-81b4c9251374 h1:j/d525E/jC2oRi4Lc02UC9g+miF7hqJ62W7ye/kh2d8=
 github.com/bmheenan/taps v0.0.0-20201031141326-81b4c9251374/go.mod h1:H6HrpTwiPHsDKciJIt9dWIvmlsjBszoXADE6DGOCh40=
 github.com/bmheenan/taps v0.0.0-20201101235118-6f4b0edbd1dc h1:zqZ/R6+8W/FoPeiQDPY2jJDTKcHQ07cUqrTnXx74vYE=
