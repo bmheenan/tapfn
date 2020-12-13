@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-
-	"github.com/bmheenan/taps"
 )
 
 func (cn *cnTapdb) ThreadLink(parent, child int64) error {
@@ -30,7 +28,7 @@ func (cn *cnTapdb) ThreadLink(parent, child int64) error {
 	ordLow := cn.db.GetOrdBeforeForParent(parent, iter, math.MaxInt32)
 	ord := ((math.MaxInt32 - ordLow) / 2) + ordLow
 	cn.db.NewThreadHierLink(parent, child, iter, ord, p.Owner.Domain)
-	cn.moveThreadBeforeAns(c)
+	cn.moveThreadBeforeAns(c.ID)
 	cn.recalcAllCostTot(parent)
 	cn.balanceParent(parent, iter)
 	cn.recalcAllStkCosts(parent)
@@ -60,22 +58,31 @@ func (cn *cnTapdb) wouldMakeLoop(parent, child int64) bool {
 	return false
 }
 
-func (cn *cnTapdb) moveThreadBeforeAns(thread taps.Thread) {
-	for _, a := range cn.db.GetThreadAns(thread.ID) {
-		if a.ID == thread.ID {
+func (cn *cnTapdb) moveThreadBeforeAns(thread int64) {
+	for _, a := range cn.db.GetThreadAns(thread) {
+		if a.ID == thread {
 			continue
 		}
-		for s := range thread.Stks {
+		th, err := cn.Thread(thread)
+		if err != nil {
+			panic(fmt.Sprintf("Could not get thread: %v", err))
+		}
+		for s := range th.Stks {
 			if _, ok := a.Stks[s]; !ok {
 				continue
 			}
-			if a.Stks[s].Iter != thread.Stks[s].Iter {
+			if a.Stks[s].Iter != th.Stks[s].Iter {
 				continue
 			}
-			if a.Stks[s].Ord > thread.Stks[s].Ord {
+			// Need to refresh thread order; it may have been changed in a previous loop of this thread
+			t, err := cn.Thread(thread)
+			if err != nil {
+				panic(fmt.Sprintf("Could not get thread: %v", err))
+			}
+			if a.Stks[s].Ord > t.Stks[s].Ord {
 				continue
 			}
-			cn.ThreadMoveForStk(thread.ID, a.ID, s, MoveBeforeRef)
+			cn.ThreadMoveForStk(thread, a.ID, s, MoveBeforeRef)
 		}
 	}
 

@@ -62,7 +62,7 @@ func (cn *cnTapdb) ThreadSetIter(thread int64, iter string) {
 	}
 	for id, th := range threadsToUpdate {
 		cn.recalcAllStkCosts(id)
-		cn.moveThreadBeforeAns(th)
+		cn.moveThreadBeforeAns(th.ID)
 	}
 	for stkIter := range stkItersToUpdate {
 		si := strings.Split(stkIter, ":")
