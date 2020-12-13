@@ -24,21 +24,21 @@ func (cn *cnTapdb) ThreadMoveForStk(thread, reference int64, stkE string, moveTo
 		ordB := cn.db.GetOrdBeforeForStk(stkE, ti, math.MaxInt32)
 		nOrd = ordB + ((math.MaxInt32 - ordB) / 2)
 	case MoveBeforeRef:
-		r, err := cn.db.GetThread(reference)
+		var lowestID int64
+		lowestOrd := math.MaxInt32
+		for _, dec := range cn.db.GetThreadDes(reference) {
+			if dec.Stks[stkE].Ord < lowestOrd {
+				lowestOrd = dec.Stks[stkE].Ord
+				lowestID = dec.ID
+			}
+		}
+		r, err := cn.db.GetThread(lowestID)
 		if err != nil {
-			panic(fmt.Sprintf("Could not get threadrel for reference thread %v: %v", reference, err))
+			panic(fmt.Sprintf("Could not get threadrel for dec reference thread %v: %v", lowestID, err))
 		}
 		ri := iterResulting(r.Iter, stk.Cadence)
 		if ti != ri {
-			panic(fmt.Sprintf(
-				"Cannot move thread %v (iteration %v=%v) before thread %v (iteration %v:=%v): different iterations",
-				thread,
-				t.Iter,
-				ti,
-				reference,
-				r.Iter,
-				ri,
-			))
+			panic(fmt.Sprintf("Can't move thread %v (%v=%v) before %v (%v:=%v): different iterations", thread, t.Iter, ti, lowestID, r.Iter, ri))
 		}
 		ordB := cn.db.GetOrdBeforeForStk(stkE, ti, r.Stks[stkE].Ord)
 		nOrd = ordB + ((r.Stks[stkE].Ord - ordB) / 2)
