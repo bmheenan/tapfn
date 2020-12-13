@@ -82,3 +82,40 @@ func TestRecalcPriWithFullTree(t *testing.T) {
 		}
 	}
 }
+
+func TestRecalcPriOnSetOwner(t *testing.T) {
+	cn, stks, ths := setupTest("2 stk, 3 th on 1")
+	type mType struct {
+		name string
+		pct  float64
+	}
+	matrix := []mType{
+		mType{name: "A", pct: 0.0},
+		mType{name: "B", pct: 1.0 / 3},
+		mType{name: "C", pct: 2.0 / 3},
+	}
+	for _, m := range matrix {
+		th, err := cn.Thread(ths[m.name].ID)
+		if err != nil {
+			t.Fatalf("Could not get thread: %v", err)
+		}
+		if x, g := m.pct, th.Percentile; x != g {
+			t.Fatalf("Thread %v before setting owner: Expected percentile %v; got %v", m.name, x, g)
+		}
+	}
+	cn.ThreadSetOwner(ths["B"].ID, stks["b"].Email)
+	matrix = []mType{
+		mType{name: "A", pct: 0.0},
+		mType{name: "B", pct: 0.0},
+		mType{name: "C", pct: 1.0 / 2},
+	}
+	for _, m := range matrix {
+		th, err := cn.Thread(ths[m.name].ID)
+		if err != nil {
+			t.Fatalf("Could not get thread: %v", err)
+		}
+		if x, g := m.pct, th.Percentile; x != g {
+			t.Fatalf("Thread %v after setting owner: Expected percentile %v; got %v", m.name, x, g)
+		}
+	}
+}
