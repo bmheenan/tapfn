@@ -20,6 +20,7 @@ func (cn *cnTapdb) ThreadSetOwner(id int64, owner string) {
 		cn.db.SetOwner(d.ID, owner)
 		cn.recalcAllStkCosts(d.ID)
 		stkItersAffected[d.Owner.Email+":"+d.Stks[d.Owner.Email].Iter] = true
+		stkItersAffected[owner+":"+d.Stks[owner].Iter] = true
 	}
 	for stkIter := range stkItersAffected {
 		si := strings.Split(stkIter, ":")

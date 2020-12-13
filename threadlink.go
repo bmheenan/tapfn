@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"math"
+
+	"github.com/bmheenan/taps"
 )
 
 func (cn *cnTapdb) ThreadLink(parent, child int64) error {
@@ -28,6 +30,7 @@ func (cn *cnTapdb) ThreadLink(parent, child int64) error {
 	ordLow := cn.db.GetOrdBeforeForParent(parent, iter, math.MaxInt32)
 	ord := ((math.MaxInt32 - ordLow) / 2) + ordLow
 	cn.db.NewThreadHierLink(parent, child, iter, ord, p.Owner.Domain)
+	cn.moveThreadBeforeAns(c)
 	cn.recalcAllCostTot(parent)
 	cn.balanceParent(parent, iter)
 	cn.recalcAllStkCosts(parent)
@@ -55,4 +58,25 @@ func (cn *cnTapdb) wouldMakeLoop(parent, child int64) bool {
 		}
 	}
 	return false
+}
+
+func (cn *cnTapdb) moveThreadBeforeAns(thread taps.Thread) {
+	for _, a := range cn.db.GetThreadAns(thread.ID) {
+		if a.ID == thread.ID {
+			continue
+		}
+		for s := range thread.Stks {
+			if _, ok := a.Stks[s]; !ok {
+				continue
+			}
+			if a.Stks[s].Iter != thread.Stks[s].Iter {
+				continue
+			}
+			if a.Stks[s].Ord > thread.Stks[s].Ord {
+				continue
+			}
+			cn.ThreadMoveForStk(thread.ID, a.ID, s, MoveBeforeRef)
+		}
+	}
+
 }

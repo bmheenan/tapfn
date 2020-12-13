@@ -3,11 +3,13 @@ package tapfn
 import (
 	"fmt"
 	"strings"
+
+	"github.com/bmheenan/taps"
 )
 
 func (cn *cnTapdb) ThreadSetIter(thread int64, iter string) {
 	stkItersToUpdate := map[string]bool{}
-	threadsToUpdate := map[int64]bool{}
+	threadsToUpdate := map[int64]taps.Thread{}
 	th, err := cn.db.GetThread(thread)
 	if err != nil {
 		panic(fmt.Sprintf("Could not get thread: %v", err))
@@ -56,13 +58,14 @@ func (cn *cnTapdb) ThreadSetIter(thread int64, iter string) {
 			cn.db.SetIterForStk(dec.ID, stk, iter)
 			cn.ThreadMoveForStk(dec.ID, 0, stk, place)
 		}
-		threadsToUpdate[dec.ID] = true
+		threadsToUpdate[dec.ID] = *dec
+	}
+	for id, th := range threadsToUpdate {
+		cn.recalcAllStkCosts(id)
+		cn.moveThreadBeforeAns(th)
 	}
 	for stkIter := range stkItersToUpdate {
 		si := strings.Split(stkIter, ":")
 		cn.recalcPri(si[0], si[1])
-	}
-	for th := range threadsToUpdate {
-		cn.recalcAllStkCosts(th)
 	}
 }
