@@ -26,11 +26,17 @@ func (cn *cnTapdb) ThreadMoveForStk(thread, reference int64, stkE string, moveTo
 	case MoveBeforeRef:
 		var lowestID int64
 		lowestOrd := math.MaxInt32
+		thDes := cn.db.GetThreadDes(thread)
 		for _, dec := range cn.db.GetThreadDes(reference) {
-			if dec.Stks[stkE].Ord < lowestOrd {
-				lowestOrd = dec.Stks[stkE].Ord
-				lowestID = dec.ID
+			if dec.Stks[stkE].Ord >= lowestOrd {
+				continue
 			}
+			if _, ok := thDes[dec.ID]; ok {
+				// Don't move the thread above its own descendant
+				continue
+			}
+			lowestOrd = dec.Stks[stkE].Ord
+			lowestID = dec.ID
 		}
 		r, err := cn.db.GetThread(lowestID)
 		if err != nil {
